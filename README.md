@@ -47,12 +47,16 @@ func main() {
 
 	// 设置加密参数
 	params := enc.Payload{
-		PlainText: "tmpl/basetmpl/enc.bin",
+		PlainText: "tmpl/basetmpl/payload.bin",
 		Key:       []byte(data.KeyValue),
 		IV:        []byte(data.IvValue),
 	}
 	// 加密之后的 shellcode
-	data.Payload, _ = params.EncSetKeyIv()
+	tmp, err := params.SKEASetKeyIv()
+	if err != nil {
+		log.Fatal(err)
+	}
+	data.Payload = tmp
 
 	// 设置模板的渲染参数
 	TOpts := tmpl.TOpts{
@@ -62,9 +66,9 @@ func main() {
 		Data:         data,
 	}
 	// 生成模板
-	err := tmpl.BuildTmpl(TOpts)
+	err = tmpl.BuildTmpl(TOpts)
 	if err != nil {
-		log.Warn(err)
+		log.Fatal(err)
 	}
 
 	// 编译参数
@@ -75,13 +79,11 @@ func main() {
 		CompileDetail: false,
 		CompilePath:   "output",
 	}
-
 	// 编译
 	if err = opts.Compile(); err != nil {
 		log.Fatal(err)
 	}
 }
-
 ```
 
 ### Thanks
