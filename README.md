@@ -1,6 +1,6 @@
 # variant
 
-Go Anti-Virus Module Framework
+Go Anti-Virus Framework
 
 ## Description
 
