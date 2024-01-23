@@ -15,11 +15,26 @@ Go Anti-Virus Framework
 ### 更新日志
 
 1. 模块化配置
+
 2. 模板渲染
+
 3. 编译控制
+
 4. UPX压缩
+
+   > 需要检查`upx.exe`是否正确放置在`build`文件夹，才能正确初始化
+
 5. 签名伪造
+
 6. 添加图标文件信息
+
+   > 初始化安装
+   >
+   > `go install github.com/tc-hib/go-winres@latest`
+
+7. 模板更新
+
+8. 反沙箱模块更新，更改为验证为沙箱之后程序正常退出
 
 ## Demo
 
