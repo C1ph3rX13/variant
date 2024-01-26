@@ -36,6 +36,12 @@ Go Anti-Virus Framework
 
 8. 反沙箱模块更新，更改为验证为沙箱之后程序正常退出
 
+### todo
+
+1. 动态`key` 
+2. 熵控制
+3. 隐藏导入表
+
 ## Demo
 
 ```go
