@@ -14,29 +14,35 @@ Go Anti-Virus Framework
 
 ### 更新日志
 
+### 2024.1.29
+
+1. 新增渲染判断，模板可根据结构体来渲染
+2. 更改为验证为沙箱之后程序正常退出
+3. 新增代码检查：检查通过再编译；初始化：`go install golang.org/x/tools/cmd/goimports@latest`
+4. 细化结构体：根据功能区分
+5. 新增压缩算法：`lzw`, `zstd`；熵值模块
+6. 新增动态方法：`GetSelfSHA256Nth`
+7. 优化代码逻辑
+
+### 2024.1.27
+
 1. 模块化配置
 
 2. 模板渲染
 
 3. 编译控制
 
-4. UPX压缩
-
-   > 需要检查`upx.exe`是否正确放置在`build`文件夹，才能正确初始化
+4. UPX压缩：需要检查`upx.exe`是否正确放置在`build`文件夹，才能正确初始化
 
 5. 签名伪造
 
-6. 添加图标文件信息
-
-   > 初始化安装
-   >
-   > `go install github.com/tc-hib/go-winres@latest`
+6. 添加图标文件信息：初始化：`go install github.com/tc-hib/go-winres@latest`
 
 7. 模板更新
 
-8. 反沙箱模块更新，更改为验证为沙箱之后程序正常退出
+8. 反沙箱模块
 
-### todo
+### TODO
 
 1. 动态`key` 
 2. 熵控制
