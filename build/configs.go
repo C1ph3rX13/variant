@@ -3,7 +3,7 @@ package build
 type CompileOpts struct {
 	GoFileName  string // Go 文件名称
 	ExeFileName string // Exe 文件名称
-	HideConsole bool   // 编译隐藏CMD
+	HideConsole bool   // 编译隐藏控制台
 	CompilePath string // 编译路径
 }
 

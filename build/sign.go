@@ -10,7 +10,10 @@ import (
 
 // SaveCert 保存证书到指定文件
 func (sOpts SignOpts) SaveCert() error {
-	cert, err := getCert(filepath.Join(sOpts.SignPath, sOpts.Thief))
+	// 指定保存EXE文件证书
+	target := filepath.Join(sOpts.SignPath, sOpts.Thief)
+
+	cert, err := getCert(target)
 	if err != nil {
 		return fmt.Errorf("<SaveCert getCert() err: %v>", err)
 	}
@@ -41,7 +44,7 @@ func getCert(singed string) ([]byte, error) {
 }
 
 // signThief 将文件签名为指定证书
-func signThief(unSign string, signed string, certTable []byte) error {
+func signThief(unSign string, signedOutput string, certTable []byte) error {
 	peFile, err := pe.Open(unSign)
 	if err != nil {
 		return fmt.Errorf("<SignThief pe.Open() err: %v>", err)
@@ -50,7 +53,7 @@ func signThief(unSign string, signed string, certTable []byte) error {
 
 	peFile.CertificateTable = certTable
 
-	err = peFile.WriteFile(signed)
+	err = peFile.WriteFile(signedOutput)
 	if err != nil {
 		return fmt.Errorf("<SignThief pe.WriteFile() err: %v>", err)
 	}
@@ -60,12 +63,20 @@ func signThief(unSign string, signed string, certTable []byte) error {
 
 // CertThief 使用指定证书签名文件
 func (sOpts SignOpts) CertThief() error {
-	thiefTable, err := os.ReadFile(filepath.Join(sOpts.SignPath, sOpts.Cert))
+	// 指定签名所需的证书文件
+	targetCert := filepath.Join(sOpts.SignPath, sOpts.Cert)
+
+	thiefTable, err := os.ReadFile(targetCert)
 	if err != nil {
 		return fmt.Errorf("<CertThief os.ReadFile() err: %v>", err)
 	}
 
-	err = signThief(filepath.Join(sOpts.SignPath, sOpts.UnSign), filepath.Join(sOpts.SignPath, sOpts.Signed), thiefTable)
+	// 编译后未签名
+	unSignExe := filepath.Join(sOpts.SignPath, sOpts.UnSign)
+	// 添加签名后输出的文件
+	signedOutput := filepath.Join(sOpts.SignPath, sOpts.Signed)
+
+	err = signThief(unSignExe, signedOutput, thiefTable)
 	if err != nil {
 		return fmt.Errorf("<CertThief signThief() err: %v>", err)
 	} else {
@@ -77,13 +88,21 @@ func (sOpts SignOpts) CertThief() error {
 
 // ExeThief 使用指定可执行文件签名另一个文件
 func (sOpts SignOpts) ExeThief() error {
-	peFile, err := pe.Open(filepath.Join(sOpts.SignPath, sOpts.Thief))
+	// 指定签名所需的 EXE 文件
+	targetExe := filepath.Join(sOpts.SignPath, sOpts.Thief)
+
+	peFile, err := pe.Open(targetExe)
 	if err != nil {
 		return fmt.Errorf("<ExeThief pe.Open() err: %v>", err)
 	}
 	defer peFile.Close()
 
-	err = signThief(filepath.Join(sOpts.SignPath, sOpts.UnSign), filepath.Join(sOpts.SignPath, sOpts.Signed), peFile.CertificateTable)
+	// 编译后未签名
+	unSignExe := filepath.Join(sOpts.SignPath, sOpts.UnSign)
+	// 添加签名后输出的文件
+	signedOutput := filepath.Join(sOpts.SignPath, sOpts.Signed)
+
+	err = signThief(unSignExe, signedOutput, peFile.CertificateTable)
 	if err != nil {
 		return fmt.Errorf("<ExeThief signThief() err: %v>", err)
 	} else {

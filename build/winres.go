@@ -3,7 +3,6 @@ package build
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"variant/log"
 )
@@ -17,20 +16,6 @@ func checkInit(path string) bool {
 	}
 
 	return false
-}
-
-func (cOpts CompileOpts) execCmd(args []string) error {
-	cmd := exec.Command(args[0], args[1:]...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Dir = cOpts.CompilePath
-
-	err := cmd.Run()
-	if err != nil {
-		return fmt.Errorf("%s failed: %v", cmd, err)
-	}
-
-	return nil
 }
 
 func (cOpts CompileOpts) resInit() error {

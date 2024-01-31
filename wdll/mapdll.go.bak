@@ -1,0 +1,60 @@
+package windll
+
+import "syscall"
+
+type WinDll struct {
+	Dlls map[string]*syscall.LazyDLL
+}
+
+var Dll *WinDll
+
+func init() {
+	Dll = &WinDll{
+		Dlls: map[string]*syscall.LazyDLL{
+			"kernel32": syscall.NewLazyDLL("kernel32.dll"),
+			"ntdll":    syscall.NewLazyDLL("ntdll.dll"),
+			"rpcrt4":   syscall.NewLazyDLL("Rpcrt4.dll"),
+		},
+	}
+}
+
+func NewProcByName(dllName, procName string) *syscall.LazyProc {
+	dll, ok := Dll.Dlls[dllName]
+	if !ok {
+		return nil
+	}
+	return dll.NewProc(procName)
+}
+
+var ProcMap = map[string]string{
+	"VirtualAlloc":         "kernel32",
+	"VirtualProtect":       "kernel32",
+	"RtlCopyMemory":        "kernel32",
+	"RtlCopyBytes":         "kernel32",
+	"ConvertThreadToFiber": "kernel32",
+	"CreateFiber":          "kernel32",
+	"SwitchToFiber":        "kernel32",
+	"GetCurrentThread":     "kernel32",
+	"NtQueueApcThreadEx":   "kernel32",
+	"EtwpCreateEtwThread":  "kernel32",
+	"WaitForSingleObject":  "kernel32",
+	"CreateThread":         "kernel32",
+	"OpenProcess":          "kernel32",
+	"VirtualAllocEx":       "kernel32",
+	"VirtualProtectEx":     "kernel32",
+	"WriteProcessMemory":   "kernel32",
+	"CreateRemoteThreadEx": "kernel32",
+	"CloseHandle":          "kernel32",
+	"HeapCreate":           "kernel32",
+	"HeapAlloc":            "kernel32",
+	"EnumSystemLocalesA":   "kernel32",
+	"UuidFromStringA":      "kernel32",
+}
+
+func GetProcByName(procName string) *syscall.LazyProc {
+	dllName, ok := ProcMap[procName]
+	if !ok {
+		return nil
+	}
+	return NewProcByName(dllName, procName)
+}

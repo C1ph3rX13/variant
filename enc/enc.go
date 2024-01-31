@@ -3,68 +3,110 @@ package enc
 import (
 	"errors"
 	"fmt"
-	"variant/crypto"
+	"reflect"
 )
 
-func (params Payload) EncSetKey() (string, error) {
-	binRaw, err := BinReader(params.PlainText)
-	if err != nil {
-		return "", fmt.Errorf("<enc.BinReader()> err: %w", err)
+func (payload Payload) SetKeyIV(sign interface{}) (string, error) {
+	if len(payload.PlainText) == 0 {
+		return "", errors.New("plaintext is empty")
 	}
 
-	cipherText, err := crypto.XorRc4Base85Encrypt(binRaw, params.Key)
+	binRaw, err := BinReader(payload.PlainText)
 	if err != nil {
-		return "", fmt.Errorf("encrypt binary failed: %w", err)
+		return "", fmt.Errorf("failed to read binary data: %w", err)
 	}
 
-	return cipherText, nil
-}
-
-func (params Payload) SKEASetKeyIv() (string, error) {
-	if len(params.Key) != 16 || len(params.IV) != 16 {
+	if len(payload.Key) != 16 && len(payload.IV) != 16 {
 		return "", fmt.Errorf("the length of key and iv should be greater equal to 16")
 	}
 
-	binRaw, err := BinReader(params.PlainText)
-	if err != nil {
-		return "", fmt.Errorf("<enc.BinReader()> err: %w", err)
-	}
+	// 获取签名函数的值和类型
+	signValue := reflect.ValueOf(sign)
+	signType := signValue.Type()
 
-	cipherText, err := crypto.XorSm4HexBase85Encrypt(binRaw, params.Key, params.IV)
-	if err != nil {
-		return "", fmt.Errorf("encrypt binary failed: %w", err)
-	}
+	switch signType.Kind() {
+	case reflect.Func:
+		// 获取函数参数数量
+		numParams := signType.NumIn()
+		if numParams < 2 || numParams > 3 {
+			return "", errors.New("sign function should have 2 or 3 parameters")
+		}
 
-	return cipherText, nil
+		// 创建参数值切片
+		params := make([]reflect.Value, numParams)
+		params[0] = reflect.ValueOf(binRaw)
+		params[1] = reflect.ValueOf(payload.Key)
+
+		if numParams == 3 {
+			params[2] = reflect.ValueOf(payload.IV)
+		}
+
+		// 调用函数并获取结果
+		results := signValue.Call(params)
+
+		if len(results) < 2 {
+			return "", errors.New("sign function does not return expected result")
+		}
+
+		// 提取加密后的密文和可能的错误值
+		cipherText := results[0].String()
+		errValue := results[1].Interface()
+
+		// 判断加密是否成功
+		if errValue != nil {
+			return "", fmt.Errorf("encryption failed: %v", errValue)
+		}
+
+		return cipherText, nil
+	default:
+		return "", errors.New("sign is not a valid function")
+	}
 }
 
-func (params Payload) SignSetKeyIV(signFn interface{}) (string, error) {
-	binRaw, err := BinReader(params.PlainText)
-	if err != nil {
-		return "", fmt.Errorf("<BinReader()> err: %w", err)
+func (payload Payload) NoKeyIV(sign interface{}) (string, error) {
+	if len(payload.PlainText) == 0 {
+		return "", errors.New("plaintext is empty")
 	}
 
-	switch signFn := signFn.(type) {
-	// 形参为: (cipherText, key []byte)
-	case func([]byte, []byte) (string, error):
-		cipherText, err := signFn(binRaw, params.Key)
-		if err != nil {
-			return "", fmt.Errorf("encrypt failed: %w", err)
-		}
-		return cipherText, nil
+	binRaw, err := BinReader(payload.PlainText)
+	if err != nil {
+		return "", fmt.Errorf("failed to read binary data: %w", err)
+	}
 
-	// 形参为: (cipherText, key, iv []byte)
-	case func([]byte, []byte, []byte) (string, error):
-		if len(params.Key) != 16 || len(params.IV) != 16 {
-			return "", fmt.Errorf("the length of key and iv should be greater equal to 16")
-		}
-		cipherText, err := signFn(binRaw, params.Key, params.IV)
-		if err != nil {
-			return "", fmt.Errorf("encrypt failed: %w", err)
-		}
-		return cipherText, nil
+	// 获取签名函数的值和类型
+	signValue := reflect.ValueOf(sign)
+	signType := signValue.Type()
 
+	switch signType.Kind() {
+	case reflect.Func:
+		// 获取函数参数数量
+		numParams := signType.NumIn()
+		if numParams < 1 || numParams > 2 {
+			return "", errors.New("sign function should have 1 or 2 parameters")
+		}
+
+		// 创建参数值切片
+		params := make([]reflect.Value, numParams)
+		params[0] = reflect.ValueOf(binRaw)
+
+		// 调用函数并获取结果
+		results := signValue.Call(params)
+
+		if len(results) < 2 {
+			return "", errors.New("sign function does not return expected result")
+		}
+
+		// 提取加密后的密文和可能的错误值
+		cipherText := results[0].String()
+		errValue := results[1].Interface()
+
+		// 判断加密是否成功
+		if errValue != nil {
+			return "", fmt.Errorf("encryption failed: %v", errValue)
+		}
+
+		return cipherText, nil
 	default:
-		return "", errors.New("unsupported encryption function signature")
+		return "", errors.New("sign is not a valid function")
 	}
 }

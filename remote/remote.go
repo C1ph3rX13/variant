@@ -2,14 +2,13 @@ package remote
 
 import (
 	"bytes"
-	"github.com/go-resty/resty/v2"
 	"io"
 	"net/http"
-	"os"
 )
 
+// Resty 远程读取，返回 []byte 类型
 func Resty(url string) ([]byte, error) {
-	resp, err := resty.New().R().Get(url)
+	resp, err := restyConf().R().Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -22,8 +21,29 @@ func Resty(url string) ([]byte, error) {
 	return data, nil
 }
 
+// RestyStrings 远程读取，返回 string 类型
+func RestyStrings(url string) (string, error) {
+	body, err := Resty(url)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
+}
+
+// Http 远程读取，返回 []byte 类型
 func Http(url string) ([]byte, error) {
-	resp, err := http.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+
+	client := httpConf()
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -37,10 +57,12 @@ func Http(url string) ([]byte, error) {
 	return body, nil
 }
 
-func SaveEncryptData(data []byte, fileName string) error {
-	err := os.WriteFile(fileName, data, 0644)
+// HttpString 远程读取，返回 string 类型
+func HttpString(url string) (string, error) {
+	body, err := Http(url)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+
+	return string(body), nil
 }

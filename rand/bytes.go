@@ -1,5 +1,6 @@
 package rand
 
+import "C"
 import (
 	"crypto/rand"
 	"fmt"

