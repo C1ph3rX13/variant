@@ -14,6 +14,15 @@ Go Anti-Virus Framework
 
 ### 更新日志
 
+### 2024.1.30
+
+1. `lzw`压缩导致熵值上升到`7.0+`；测试`fmt.Printf("Hello World")`编译后熵值在`6.0-6.1`之间，压缩模块下次一定
+2. 远程加载：模块、模板、配置更新
+3. 重构加密模块，利用反射根据传入的方法签名判断加密
+4. 使用`windows package`重写了`DLL`调用模块，[`syscall`&`windows`的总结](https://c1ph3rx13.github.io/posts/2024-01-30/The-low-level-Operating-System-Primitives/)
+5. 模板新增根据自定义导入对应库设置
+6. 新增多个多重加密/编码方法，`Base32/62`编码测试熵值比较低
+
 ### 2024.1.29
 
 1. 新增渲染判断，模板可根据结构体来渲染
