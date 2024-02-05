@@ -24,7 +24,7 @@ func main() {
 	{{end}}
 
 	{{if .Compressor}}
-	    {{.KeyName}}, _ = {{.Compressor.Algorithm}}({{.KeyName}}, {{.Compressor.Ratio}})
+	    {{- .KeyName}}, _ = {{.Compressor.Algorithm}}({{.KeyName}}, {{.Compressor.Ratio}})
     {{end}}
 
 	{{if .IvName}}

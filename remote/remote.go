@@ -57,8 +57,8 @@ func Http(url string) ([]byte, error) {
 	return body, nil
 }
 
-// HttpString 远程读取，返回 string 类型
-func HttpString(url string) (string, error) {
+// HttpStrings 远程读取，返回 string 类型
+func HttpStrings(url string) (string, error) {
 	body, err := Http(url)
 	if err != nil {
 		return "", err

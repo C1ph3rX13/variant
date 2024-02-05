@@ -14,6 +14,16 @@ Go Anti-Virus Framework
 
 ### 更新日志
 
+### 2024.2.5
+
+1. 新增参数加载模块，可以自定义(随机)密钥
+2. 模板简化，兼容所有模块的渲染
+3. 渲染模块优化，兼容所有模块的调用
+4. 新增远程加载模块，远程加密数据的上传会在渲染阶段完成，上传(`curl:已完成, web:开发中...`)支持代理
+5. 新增动态数据模块可以和任意加载方式联动
+6. 新增上传加密`Payload`随机化
+7. 新增`loader:earlybird`
+
 ### 2024.2.4
 
 1. 新增动态获取解密数据的模块 - `Dynamic: payload, key, iv`
@@ -53,26 +63,26 @@ Go Anti-Virus Framework
 
 ### TODO
 
-1. 动态`key` 
-2. 熵控制
-3. 隐藏导入表
+1. + [x] 动态`key, iv`
+2. + [ ] 熵控制
+3. + [ ] 隐藏导入表
 
 ## Tmpl Struct
 
 ```go
 type Data struct {
-	CipherText string      // 保存加密文本的变量名
-	PlainText  string      // 保存解密文本的变量名
-	Payload    string      // 加密 shellcode
-	Decrypt    string      // 解密方法
-	Loader     string      // loader
-	SandBox    interface{} // 反沙箱模块
-	Local      interface{} // 本地加载模块
-	Remote     interface{} // 远程加载模块
-	Args       interface{} // 参数加载模块
-	Compressor interface{} // 压缩算法模块
-	Apart      interface{} // 分离加载模块
-	Dynamic    interface{} // 动态数据
+	CipherText    string      // 保存加密文本的变量名
+	PlainText     string      // 保存解密文本的变量名
+	Payload       string      // 加密 shellcode
+	DecryptMethod string      // 解密方法
+	Loader        interface{} // loader
+	SandBox       interface{} // 反沙箱模块
+	Local         interface{} // 本地加载模块
+	Remote        interface{} // 远程加载模块
+	Args          interface{} // 参数加载模块
+	Compressor    interface{} // 压缩算法模块
+	Apart         interface{} // 分离加载模块
+	Dynamic       interface{} // 动态数据
 }
 ```
 

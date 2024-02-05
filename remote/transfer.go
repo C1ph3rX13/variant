@@ -13,7 +13,7 @@ type Transfer struct {
 	Proxy string
 }
 
-func (transfer Transfer) execCmd(args []string) (string, error) {
+func (transfer Transfer) execCmd(args []string) string {
 	cmd := exec.Command(args[0], args[1:]...)
 
 	if transfer.Path != "" {
@@ -22,13 +22,13 @@ func (transfer Transfer) execCmd(args []string) (string, error) {
 
 	output, err := cmd.Output()
 	if err != nil {
-		return "", fmt.Errorf("%s failed: %v", cmd, err)
+		log.Fatalf("%s failed: %v", cmd, err)
 	}
 
-	return string(output), nil
+	return string(output)
 }
 
-func (transfer Transfer) CurlUpload() (string, error) {
+func (transfer Transfer) CurlUpload() string {
 	curlArgs := []string{
 		"curl",
 		"--upload-file",
@@ -42,12 +42,8 @@ func (transfer Transfer) CurlUpload() (string, error) {
 	}
 
 	log.Infof("Upload: %s", curlArgs)
-	output, err := transfer.execCmd(curlArgs)
-	if err != nil {
-		return "", err
-	} else {
-		log.Infof("Upload Url: %s", output)
-	}
+	output := transfer.execCmd(curlArgs)
+	log.Infof("Upload Url: %s", output)
 
-	return output, nil
+	return output
 }

