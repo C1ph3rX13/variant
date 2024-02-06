@@ -20,13 +20,13 @@ func (cOpts CompileOpts) Compile() error {
 		"-trimpath", cOpts.GoFileName,
 	}
 
-	log.Infof("CompilePath: %v", cOpts.CompilePath)
-	log.Infof("HideConsole: %v", cOpts.HideConsole)
-	log.Infof("Go Build: %v", cmdArgs)
-
 	if err := cOpts.fmtCode(); err != nil {
 		return err
 	}
+
+	log.Infof("CompilePath: %v", cOpts.CompilePath)
+	log.Infof("HideConsole: %v", cOpts.HideConsole)
+	log.Infof("Go Build: %v", cmdArgs)
 
 	if err := cOpts.execCmd(cmdArgs); err != nil {
 		return err
