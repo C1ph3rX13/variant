@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"io"
 	"net/http"
+	"variant/log"
 )
 
 // Resty 远程读取，返回 []byte 类型
 func Resty(url string) ([]byte, error) {
-	resp, err := restyConf().R().Get(url)
+	resp, err := CreateRestyClient().R().Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -22,13 +23,13 @@ func Resty(url string) ([]byte, error) {
 }
 
 // RestyStrings 远程读取，返回 string 类型
-func RestyStrings(url string) (string, error) {
+func RestyStrings(url string) string {
 	body, err := Resty(url)
 	if err != nil {
-		return "", err
+		log.Fatalf("request fail: %v", err)
 	}
 
-	return string(body), nil
+	return string(body)
 }
 
 // Http 远程读取，返回 []byte 类型
@@ -42,7 +43,7 @@ func Http(url string) ([]byte, error) {
 		req.Header.Set(key, value)
 	}
 
-	client := httpConf()
+	client := CreateHttpClient()
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -58,11 +59,34 @@ func Http(url string) ([]byte, error) {
 }
 
 // HttpStrings 远程读取，返回 string 类型
-func HttpStrings(url string) (string, error) {
+func HttpStrings(url string) string {
 	body, err := Http(url)
 	if err != nil {
-		return "", err
+		log.Fatalf("request fail: %v", err)
 	}
 
-	return string(body), nil
+	return string(body)
+}
+
+// Req 远程读取，返回 []byte 类型
+func Req(url string) ([]byte, error) {
+	resp, err := CreateReqClient().R().
+		SetHeaders(headers).
+		SetRetryCount(5).
+		Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Bytes(), err
+}
+
+// ReqStrings 远程读取，返回 string 类型
+func ReqStrings(url string) string {
+	body, err := Req(url)
+	if err != nil {
+		log.Fatalf("request fail: %v", err)
+	}
+
+	return string(body)
 }

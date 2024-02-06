@@ -7,12 +7,6 @@ import (
 	"variant/log"
 )
 
-type Transfer struct {
-	Src   string
-	Path  string
-	Proxy string
-}
-
 func (transfer Transfer) execCmd(args []string) string {
 	cmd := exec.Command(args[0], args[1:]...)
 
