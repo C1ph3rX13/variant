@@ -1,5 +1,8 @@
 @echo off
 
+echo init ...
+go mod tidy
+
 echo Installing go-wines
 go install github.com/tc-hib/go-winres@latest
 
