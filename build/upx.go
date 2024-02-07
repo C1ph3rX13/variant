@@ -8,28 +8,13 @@ import (
 	"variant/log"
 )
 
-func init() {
-	err := checkUpx()
-	if err != nil {
+func (upx UpxOpts) UpxPacker() error {
+	if err := upx.checkUpx(); err != nil {
 		log.Fatal(err)
 	}
-}
 
-func levelHelp() string {
-	help := `
-	Compression tuning options:
-	-1     compress faster [-123456789]                  
-	-9     compress better [-123456789]
-	--lzma              try LZMA [slower but tighter than NRV]
-	--brute             try all available compression methods & filters [slow]
-	--ultra-brute       try even more compression variants [very slow]`
-
-	return help
-}
-
-func (upx UpxOpts) UpxPacker() error {
 	if upx.Level == "" {
-		return fmt.Errorf(levelHelp())
+		return fmt.Errorf(upx.levelHelp())
 	}
 
 	args := []string{
@@ -47,11 +32,11 @@ func (upx UpxOpts) UpxPacker() error {
 	}
 
 	if upx.SrcExe != "" {
-		args = append(args, filepath.Join(upx.UpxPath, upx.SrcExe))
+		args = append(args, filepath.Join(upx.SrcPath, upx.SrcExe))
 	}
 
 	log.Infof("Upx Compress: %v", args)
-	cmd := exec.Command("build/upx.exe", args...)
+	cmd := exec.Command(filepath.Join(upx.UpxPath, "upx.exe"), args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -63,13 +48,25 @@ func (upx UpxOpts) UpxPacker() error {
 	return nil
 }
 
-func checkUpx() error {
-	_, err := os.Stat("build/upx.exe")
+func (upx UpxOpts) checkUpx() error {
+	_, err := os.Stat(filepath.Join(upx.UpxPath, "upx.exe"))
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("can't find upx.exe")
+			return fmt.Errorf("can't find upx.exe in %s", upx.UpxPath)
 		}
 	}
 
 	return nil
+}
+
+func (upx UpxOpts) levelHelp() string {
+	help := `
+	Compression tuning options:
+	-1     compress faster [-123456789]                  
+	-9     compress better [-123456789]
+	--lzma              try LZMA [slower but tighter than NRV]
+	--brute             try all available compression methods & filters [slow]
+	--ultra-brute       try even more compression variants [very slow]`
+
+	return help
 }

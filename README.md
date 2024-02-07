@@ -8,11 +8,20 @@ Go Anti-Virus Framework
 
 ### 特别说明
 
-1. 本项目不会有 `GUI` 版本，**使用方法查看demo文件夹**
+1. 本项目没有 `GUI` 版本，**使用方法查看demo文件夹**
 2. 学习Go免杀的代码集合，顺手做了模块化处理，**实际开发未结束，还在持续更新**
-3. 想要实现最好的免杀效果还需要自行修改渲染编译模板，代码提供了三种加载方式的渲染模板
+3. 最好的免杀效果需要自行修改渲染编译模板
 
 ### 更新日志
+
+### 2024.2.7
+
+1. 新增`garble(需安装)`编译的方法，支持`-seed, -literals, -debug`，但会导致编译的文件体积增大和熵值增加
+2. 重构编译模块，现在支持`原生go编译, garble编译`
+3. 调整编译的流程和日志输出逻辑
+4. 重构`Upx`模块，支持自定义`Upx.exe`的路径
+5. 重构`Winres`模块，现在使用`HandleWinRes`方法可以直接添加图标
+6. 预计新增Go编译器： [llvm](https://github.com/llvm/llvm-project/tree/llvmorg-17.0.6), [tinygo](https://github.com/tinygo-org/tinygo) - 实验性
 
 ### 2024.2.6
 
@@ -144,6 +153,28 @@ type Data struct {
 		Import: "variant/remote",
 		Url:    fi.Upload(),
 		Method: "remote.FileIORead",
+	}
+```
+
+## Executable Packer
+
+### Upx
+
+```go
+	// 压缩参数
+	upx := build.UpxOpts{
+		Level:   "--lzma",
+		Keep:    true,
+		Force:   true,
+		SrcExe:  cOpts.ExeFileName,
+		SrcPath: "output",
+		UpxPath: "build",
+	}
+
+	// 执行压缩
+	err = upx.UpxPacker()
+	if err != nil {
+		log.Fatal(err)
 	}
 ```
 

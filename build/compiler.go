@@ -7,53 +7,76 @@ import (
 	"variant/log"
 )
 
-func (cOpts CompileOpts) Compile() error {
+func (c CompileOpts) GoCompile() error {
+	return c.compile("go")
+}
+
+func (c CompileOpts) GarbleCompile() error {
+	return c.compile("garble")
+}
+
+func (c CompileOpts) compile(cmd string) error {
+	// 预先格式化代码
+	if err := c.formatCode(); err != nil {
+		return err
+	}
+
+	// 根据条件构建编译命令
+	cmdArgs := c.buildCmdArgs(cmd)
+
+	// 执行编译
+	log.Infof("CompilePath: %v", c.CompilePath)
+	log.Infof("Compiling: %v", cmdArgs)
+	if err := c.execCmd(cmdArgs); err != nil {
+		return err
+	}
+	log.Infof("Compile Succeeded: %s", c.ExeFileName)
+
+	return nil
+}
+
+func (c CompileOpts) formatCode() error {
+	fmtCmd := []string{"goimports", "-w", c.GoFileName}
+	log.Infof("Formatting Code: %v", fmtCmd)
+
+	return c.execCmd(fmtCmd)
+}
+
+func (c CompileOpts) buildCmdArgs(cmd string) []string {
 	ldflags := "-s -w"
-	if cOpts.HideConsole {
-		ldflags = "-H windowsgui " + ldflags
+	if c.HideConsole {
+		ldflags = ldflags + " -H windowsgui"
+		log.Infof("HideConsole: %v", c.HideConsole)
 	}
 
-	cmdArgs := []string{
-		"go", "build",
+	cmdArgs := []string{cmd}
+	if cmd == "garble" {
+		if c.GDebug {
+			cmdArgs = append(cmdArgs, "-debug")
+		}
+		if c.Literals {
+			cmdArgs = append(cmdArgs, "-literals")
+		}
+		if c.GSeed {
+			cmdArgs = append(cmdArgs, "-seed=random")
+		}
+	}
+
+	return append(cmdArgs,
+		"build",
 		fmt.Sprintf("-ldflags=%s", ldflags),
-		"-o", cOpts.ExeFileName,
-		"-trimpath", cOpts.GoFileName,
-	}
-
-	if err := cOpts.fmtCode(); err != nil {
-		return err
-	}
-
-	log.Infof("CompilePath: %v", cOpts.CompilePath)
-	log.Infof("HideConsole: %v", cOpts.HideConsole)
-	log.Infof("Go Build: %v", cmdArgs)
-
-	if err := cOpts.execCmd(cmdArgs); err != nil {
-		return err
-	}
-	log.Infof("Compile Done: %v", cOpts.ExeFileName)
-
-	return nil
+		"-o", c.ExeFileName,
+		"-trimpath", c.GoFileName,
+	)
 }
 
-func (cOpts CompileOpts) fmtCode() error {
-	fmtCmd := []string{"goimports", "-w", cOpts.GoFileName}
-	log.Infof("Gofmt: %v", fmtCmd)
-
-	if err := cOpts.execCmd(fmtCmd); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (cOpts CompileOpts) execCmd(args []string) error {
+func (c CompileOpts) execCmd(args []string) error {
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	if cOpts.CompilePath != "" {
-		cmd.Dir = cOpts.CompilePath
+	if c.CompilePath != "" {
+		cmd.Dir = c.CompilePath
 	}
 
 	err := cmd.Run()

@@ -3,16 +3,20 @@ package build
 type CompileOpts struct {
 	GoFileName  string // Go 文件名称
 	ExeFileName string // Exe 文件名称
-	HideConsole bool   // 编译隐藏控制台
 	CompilePath string // 编译路径
+	HideConsole bool   // 编译隐藏控制台
+	GDebug      bool   // 开启Debug日志
+	GSeed       bool   // 随机 Base64 编码的种子
+	Literals    bool
 }
 
 type UpxOpts struct {
 	Level   string // 压缩等级
 	SrcExe  string // 目标文件
-	Keep    bool
-	Force   bool
-	UpxPath string
+	SrcPath string // 压缩目录
+	UpxPath string // upx.exe文件目录
+	Keep    bool   // 保留原始文件
+	Force   bool   // 强制压缩
 }
 
 type SignOpts struct {

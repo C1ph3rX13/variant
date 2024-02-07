@@ -7,61 +7,48 @@ import (
 	"variant/log"
 )
 
-func checkInit(path string) bool {
-	resPath := filepath.Join(path, "winres")
-
-	folderInfo, err := os.Stat(resPath)
-	if os.IsNotExist(err) || !folderInfo.IsDir() {
-		return true
-	}
-
-	return false
-}
-
-func (cOpts CompileOpts) resInit() error {
-	resCmd := []string{"go-winres", "init"}
-	if err := cOpts.execCmd(resCmd); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (cOpts CompileOpts) makeInit() error {
-	resCmd := []string{"go-winres", "make"}
-	if err := cOpts.execCmd(resCmd); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (cOpts CompileOpts) Winres() error {
-	if checkInit(cOpts.CompilePath) {
-		err := cOpts.resInit()
-		if err != nil {
-			return fmt.Errorf("resInit() err: %w", err)
+func (c CompileOpts) HandleWinRes() error {
+	if c.shouldInitRes() {
+		if err := c.initRes(); err != nil {
+			return fmt.Errorf("initRes() err: %w", err)
 		}
 	}
 
-	err := cOpts.makeInit()
-	if err != nil {
-		return fmt.Errorf("makeInit() err: %w", err)
+	if err := c.makeRes(); err != nil {
+		return fmt.Errorf("makeRes() err: %w", err)
 	}
 
+	if err := c.patchRes(); err != nil {
+		return fmt.Errorf("patchRes() err: %w", err)
+	}
+
+	log.Infof("Patch Succeeded: %v", c.ExeFileName)
+	return nil
+}
+
+func (c CompileOpts) shouldInitRes() bool {
+	// 检查编译目录是否存在 winres 文件夹
+	resPath := filepath.Join(c.CompilePath, "winres")
+	folderInfo, err := os.Stat(resPath)
+	return os.IsNotExist(err) || !folderInfo.IsDir()
+}
+
+func (c CompileOpts) initRes() error {
+	return c.execCmd([]string{"go-winres", "init"})
+}
+
+func (c CompileOpts) makeRes() error {
+	return c.execCmd([]string{"go-winres", "make"})
+}
+
+func (c CompileOpts) patchRes() error {
 	patchCmd := []string{
 		"go-winres",
 		"patch",
 		"--in",
-		".\\winres\\winres.json",
-		cOpts.ExeFileName,
+		filepath.Join("winres", "winres.json"),
+		c.ExeFileName,
 	}
-
-	if err = cOpts.execCmd(patchCmd); err != nil {
-		return fmt.Errorf("patch err: %w", err)
-	}
-
-	log.Infof("Patch Done: %v", cOpts.ExeFileName)
-
-	return nil
+	log.Infof("Patching: %v", patchCmd)
+	return c.execCmd(patchCmd)
 }
