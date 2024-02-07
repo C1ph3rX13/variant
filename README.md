@@ -22,6 +22,7 @@ Go Anti-Virus Framework
 4. 重构`Upx`模块，支持自定义`Upx.exe`的路径
 5. 重构`Winres`模块，现在使用`HandleWinRes`方法可以直接添加图标
 6. 预计新增Go编译器： [llvm](https://github.com/llvm/llvm-project/tree/llvmorg-17.0.6), [tinygo](https://github.com/tinygo-org/tinygo) - 实验性
+7. 新增`install.bat`，初始化工具
 
 ### 2024.2.6
 
