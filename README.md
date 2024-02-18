@@ -14,9 +14,17 @@ Go Anti-Virus Framework
 
 ### 更新日志
 
+### 2024.2.18
+
+1. 新增`loader`：`EnumerateLoadedModulesLoad`, `EnumChildWindowsLoad`, `EnumPageFilesWLoad`
+2. `Dll`模块根据`loader`同步更新
+3. 新增`garble`编译参数：`-tiny`
+4. 新增构建模式：`-buildmode`，详情执行`go help buildmode`查看
+5. 新增`FileAnalyzer`方法，计算文件的特征：`entropy`, `md5`, `sha1`, `sha256`, `sha512`
+
 ### 2024.2.7
 
-1. 新增`garble(需安装)`编译的方法，支持`-seed, -literals, -debug`，但会导致编译的文件体积增大和熵值增加
+1. 新增`garble(需安装)`编译，支持`-seed, -literals, -debug`，但会导致编译的文件体积增大和熵值增加
 2. 重构编译模块，现在支持`原生go编译, garble编译`
 3. 调整编译的流程和日志输出逻辑
 4. 重构`Upx`模块，支持自定义`Upx.exe`的路径
@@ -102,6 +110,18 @@ type Data struct {
 	Apart         interface{} // 分离加载模块
 	Dynamic       interface{} // 动态数据
 }
+```
+
+## Compile
+
+### Windows
+
+使用特殊编译参数需要设置的环境变量，推荐设置系统环境变量的方式，使用框架来进行编译
+
+```cmd
+// 手动编译，设置临时环境变量
+set GOPRIVATE=* 
+set GOGARBLE=* 
 ```
 
 ## Remote ShellCode Exec
