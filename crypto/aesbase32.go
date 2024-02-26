@@ -21,7 +21,7 @@ func AesBase32Encrypt(plainText, key, iv []byte) (string, error) {
 }
 
 func AesBase32Decrypt(cipherText string, key, iv []byte) ([]byte, error) {
-	// Base85 解码
+	// Base32 解码
 	base32Decode, err := base32.StdEncoding.DecodeString(cipherText)
 	if err != nil {
 		return nil, err
