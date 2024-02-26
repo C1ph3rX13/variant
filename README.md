@@ -14,6 +14,12 @@ Go Anti-Virus Framework
 
 ### 更新日志
 
+### 2024.2.20
+
+1. 新增`loader`：`ipv4`, `macaddress`, `enumsystemlocales + Hell's Gate + Halo's Gate technique`
+2. `Dll`模块重构调用方式，特征更新
+3. 新增`hook`模块，`Hook函数检测`，`ETW Patch`，`权限检测/提权`
+
 ### 2024.2.18
 
 1. 新增`loader`：`EnumerateLoadedModulesLoad`, `EnumChildWindowsLoad`, `EnumPageFilesWLoad`
