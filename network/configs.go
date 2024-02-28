@@ -1,4 +1,4 @@
-package remote
+package network
 
 type Transfer struct {
 	Src   string // 上传的加密文件

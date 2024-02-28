@@ -1,4 +1,4 @@
-package remote
+package network
 
 import (
 	"bytes"
@@ -39,7 +39,7 @@ func Http(url string) ([]byte, error) {
 		return nil, err
 	}
 
-	for key, value := range headers {
+	for key, value := range GetRandomAgent() {
 		req.Header.Set(key, value)
 	}
 
@@ -71,7 +71,6 @@ func HttpStrings(url string) string {
 // Req 远程读取，返回 []byte 类型
 func Req(url string) ([]byte, error) {
 	resp, err := CreateReqClient().R().
-		SetHeaders(headers).
 		SetRetryCount(5).
 		Get(url)
 	if err != nil {

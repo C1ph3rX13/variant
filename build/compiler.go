@@ -55,6 +55,7 @@ func (c CompileOpts) buildCmdArgs(cmd string) []string {
 		ldflagsBuilder.WriteString(" -H windowsgui")
 		log.Infof("HideConsole: %v", c.HideConsole)
 	}
+
 	// 编译模式, go help buildmode
 	if c.BuildMode != "" {
 		ldflagsBuilder.WriteString(fmt.Sprintf(" -buildmode=%s", c.BuildMode))

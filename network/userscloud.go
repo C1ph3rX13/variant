@@ -1,4 +1,4 @@
-package remote
+package network
 
 import (
 	"encoding/json"
@@ -10,17 +10,17 @@ import (
 )
 
 func (uc UsersCloud) UCUpload() string {
-	url := "https://u3174.userscloud.com/cgi-bin/upload.cgi?upload_type=file&utype=anon"
-	resp, err := CreateRestyClient().R().
+	url := "https://u9458.userscloud.com/cgi-bin/upload.cgi?upload_type=file&utype=anon"
+	resp, err := CreateReqClient().R().
 		SetFile(uc.Src, filepath.Join(uc.Path, uc.Src)).
-		SetContentLength(true).
 		Post(url)
 	if err != nil {
 		log.Fatalf("upload request fail: %v", err)
 	}
 
-	if resp.StatusCode() == 200 && strings.Contains(resp.String(), "OK") {
-		fileCode := getFileCode(resp.Body())
+	if resp.StatusCode == 200 && strings.Contains(resp.String(), "OK") {
+		fileCode := getFileCode(resp.Bytes())
+		log.Infof("UsersCloud file code: %s", fileCode)
 		return fileCode
 	}
 	return ""
@@ -41,16 +41,22 @@ func getFileCode(body []byte) string {
 }
 
 func UCRead(fn string) string {
+	if fn == "" {
+		log.Fatal("UsersCloud upload fail")
+	}
+
 	url := fmt.Sprintf("https://userscloud.com/%s", fn)
 	body := fmt.Sprintf("op=download2&id=%s&rand=&referer=&method_free=&method_premium=&down_script=1&down_script=1", fn)
 
-	p, err := CreateRestyClient().R().
+	p, err := CreateReqClient().R().
 		SetBody(body).
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
+		SetHeader("Origin", "https://userscloud.com/").
 		Post(url)
 	if err != nil {
 		os.Exit(0)
 	}
-
+	fmt.Println(p.Response.Status)
+	fmt.Println(p.Response.Header)
 	return p.String()
 }

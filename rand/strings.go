@@ -20,7 +20,7 @@ func LStrings(length int) string {
 	return string(b)
 }
 
-// RStrings 生成随机长度(1-10)的字符串
+// RStrings 生成随机长度(2-18)的字符串
 func RStrings() string {
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 	b := make([]rune, rand.Intn(16)+2)

@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"variant/log"
-	"variant/remote"
+	"variant/network"
 )
 
 // GetIcoHex 获取图标的Hash指定切片
@@ -14,7 +14,7 @@ func GetIcoHex(url string, start, end int) []byte {
 		log.Fatal("invalid range, end - start = 16 && end <= 64")
 	}
 
-	ico, err := remote.Resty(url)
+	ico, err := network.Resty(url)
 	if err != nil {
 		log.Fatal("get ico fail: %v", err)
 	}

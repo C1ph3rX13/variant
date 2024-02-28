@@ -7,7 +7,9 @@ type CompileOpts struct {
 	HideConsole bool   // 编译隐藏控制台
 	GDebug      bool   // 开启Debug日志
 	GSeed       bool   // 随机 Base64 编码的种子
-	Literals    bool
+	Literals    bool   // 对字符串和数字字面量进行混淆
+	Tiny        bool   // 最小化构建
+	BuildMode   string // 构建模式, 推荐值:pie
 }
 
 type UpxOpts struct {

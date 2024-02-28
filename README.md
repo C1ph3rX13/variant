@@ -14,6 +14,15 @@ Go Anti-Virus Framework
 
 ### 更新日志
 
+### 2024.2.28
+
+1. `remote`模块改名为`network`
+2. 新增多种加密：`elliptic_curve`，`morse`，`pokemon`，`rot13`，`rot47`
+3. 模板更新`V4 Base.tmpl`：兼容全部渲染方式（参数加载暂时除外）
+4. 加载模块更新：`ADsMemLoad`
+5. `remder`模块同步更新
+6. `enc`模块新增：`PokemonStrings`，`pokemon`加密专用方法；修改其他加密的兼容性
+
 ### 2024.2.20
 
 1. 新增`loader`：`ipv4`, `macaddress`, `enumsystemlocales + Hell's Gate + Halo's Gate technique`

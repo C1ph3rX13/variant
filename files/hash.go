@@ -1,4 +1,4 @@
-package dynamic
+package files
 
 import (
 	"crypto/md5"

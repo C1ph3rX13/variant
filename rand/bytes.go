@@ -21,3 +21,8 @@ func Bytes16Bit() []byte {
 	_, _ = rand.Read(bytes)
 	return bytes
 }
+
+func LByteStrings(length int) []byte {
+	byteString := LStrings(length)
+	return []byte(byteString)
+}

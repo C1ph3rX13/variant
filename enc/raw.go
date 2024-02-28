@@ -35,3 +35,20 @@ func CReader(cPath string) ([]byte, error) {
 
 	return buf, nil
 }
+
+func CStringsReader(cPath string) ([]byte, error) {
+	cData, err := os.ReadFile(path.Join(cPath))
+	if err != nil {
+		return nil, err
+	}
+
+	re := regexp.MustCompile(`\\x[0-9a-f]{2}`)
+	matches := re.FindAllString(string(cData), -1)
+
+	var byteSlice []byte
+	for _, s := range matches {
+		byteSlice = append(byteSlice, []byte(s)...)
+	}
+
+	return byteSlice, nil
+}

@@ -2,14 +2,14 @@ package crypto
 
 import "crypto/rc4"
 
-func Rc4encrypt(cipherText, key []byte) ([]byte, error) {
+func Rc4encrypt(plainText, key []byte) ([]byte, error) {
 	c, err := rc4.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
 
-	ciphertext := make([]byte, len(cipherText))
-	c.XORKeyStream(ciphertext, cipherText)
+	ciphertext := make([]byte, len(plainText))
+	c.XORKeyStream(ciphertext, plainText)
 	return ciphertext, err
 }
 

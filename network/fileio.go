@@ -1,4 +1,4 @@
-package remote
+package network
 
 import (
 	"bytes"
@@ -9,8 +9,8 @@ import (
 	"variant/log"
 )
 
-// Upload 获取上传 file.io 后的文件Url
-func (fi FileIO) Upload() string {
+// FileIOUpload 获取上传 file.io 后的文件Url
+func (fi FileIO) FileIOUpload() string {
 	url := fmt.Sprintf("https://file.io/?title=%s", fi.Src)
 
 	resp, err := CreateRestyClient().
@@ -26,6 +26,7 @@ func (fi FileIO) Upload() string {
 
 	if resp.StatusCode() == 200 && strings.Contains(resp.String(), "true") {
 		link := getLink(resp.Body())
+		log.Infof("file.io upload link: %s", link)
 		return link
 	}
 
@@ -49,7 +50,7 @@ func getLink(body []byte) string {
 	return ""
 }
 
-// FileIORead 读取 file.io 的加密文件
+// FileIORead 读取 file.io 的加密文件, 只能读取 1 次
 func FileIORead(url string) string {
 	resp, err := CreateRestyClient().
 		SetHeader("Referer", "https://www.file.io/").
