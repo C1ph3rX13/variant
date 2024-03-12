@@ -111,3 +111,7 @@ func CreateToolhelp32Snapshot() *syscall.LazyProc {
 func Thread32First() *syscall.LazyProc {
 	return NewLazyDLLAndProc(kernel32DLL, thread32First)
 }
+
+func Beep() *syscall.LazyProc {
+	return NewLazyDLLAndProc(kernel32DLL, beep)
+}

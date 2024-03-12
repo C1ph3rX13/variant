@@ -15,6 +15,10 @@ func AllocADsMem() *syscall.LazyProc {
 	return NewLazyDLLAndProc(activedsDLL, allocADsMem)
 }
 
+func ReallocADsMem() *syscall.LazyProc {
+	return NewLazyDLLAndProc(activedsDLL, reallocADsMem)
+}
+
 func I_QueryTagInformation() *syscall.LazyProc {
 	return NewLazyDLLAndProc(advapi32DLL, i_QueryTagInformation)
 }

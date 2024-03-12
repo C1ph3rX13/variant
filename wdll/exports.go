@@ -47,6 +47,9 @@ const (
 	ntAllocateVirtualMemory     = "NtAllocateVirtualMemory"
 	ntWriteVirtualMemory        = "NtWriteVirtualMemory"
 	enumSystemLocalesEx         = "EnumSystemLocalesEx"
+	reallocADsMem               = "ReallocADsMem"
+	rtlCreateUserThread         = "RtlCreateUserThread"
+	beep                        = "Beep"
 
 	// etw
 	etwEventWrite         = "EtwEventWrite"

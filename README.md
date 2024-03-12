@@ -18,6 +18,7 @@ Go Anti-Virus Framework
 
 1. 新增`initialize.bat`，自动配置项目依赖项，移除`go.mod, go.sum`
 2. 新增反沙箱：`Beep`，利用该方法达到`Sleep`的效果
+3. `wdll`模块同步更新
 
 ### 2024.2.28
 

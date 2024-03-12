@@ -65,3 +65,7 @@ func EtwEventWriteTransfer() *syscall.LazyProc {
 func NtQueryInformationThread() *syscall.LazyProc {
 	return NewLazyDLLAndProc(ntdllDLL, ntQueryInformationThread)
 }
+
+func RtlCreateUserThread() *syscall.LazyProc {
+	return NewLazyDLLAndProc(ntdllDLL, rtlCreateUserThread)
+}
