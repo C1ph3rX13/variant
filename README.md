@@ -14,6 +14,14 @@ Go Anti-Virus Framework
 
 ### 更新日志
 
+### 2024.3.19
+
+1. 更新自删除，将`hook.SelfDelete()`置于`loader,inject`方法之前即可
+
+![selfdelete](https://raw.githubusercontent.com/C1ph3rX13/variant/main/images/SelfDelete.gif)
+
+2. 新增`hashdump`功能
+
 ### 2024.3.12
 
 1. 新增`initialize.bat`，自动配置项目依赖项，移除`go.mod, go.sum`
