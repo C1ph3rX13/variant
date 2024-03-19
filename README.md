@@ -21,6 +21,7 @@ Go Anti-Virus Framework
 ![selfdelete](https://raw.githubusercontent.com/C1ph3rX13/variant/main/images/SelfDelete.gif)
 
 2. 新增`hashdump`功能
+2. 更新`demo`
 
 ### 2024.3.12
 
