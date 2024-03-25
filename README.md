@@ -14,6 +14,10 @@ Go Anti-Virus Framework
 
 ### 更新日志
 
+### 2024.3.25
+
+1. 优化`alive`自动维权模块：`WinTaskXML(), SetWinTask() `
+
 ### 2024.3.21
 
 1. 新增`alive`自动维权模块，现支持注册表启动项，计划任务`COM API`
