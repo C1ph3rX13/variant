@@ -14,6 +14,18 @@ Go Anti-Virus Framework
 
 ### 更新日志
 
+### 2024.4.1
+
+1. 新增计划任务隐藏
+
+   > + 修改 Index 为 0 隐藏：IndexToZero()
+   > + 修改/删除 SD 项：ChangeSD() & DeleteSD()
+   > + 删除注册表文件夹 SD 项：DeleteSD()
+   > + 删除注册表中的计划任务文件&文件夹：RegDeleteTaskDir()
+   > + 删除计划任务XML文件：DeleteTaskDir() & DeleteTaskFile()
+
+![RegTasks](https://raw.githubusercontent.com/C1ph3rX13/variant/main/images/RegTask.gif)
+
 ### 2024.3.25
 
 1. 优化`alive`自动维权模块：`WinTaskXML(), SetWinTask() `
