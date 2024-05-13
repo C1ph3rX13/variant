@@ -14,6 +14,12 @@ Go Anti-Virus Framework
 
 ### 更新日志
 
+### 2024.5.13
+
+1. 新增`DLL`编译：指定`DllBase.tmpl`模板，使用`BuildMode: "c-shared"`
+2. 新增`DLL`渲染模板：`DllBase.tmpl`
+3. 新增`DLL`编译demo，查看`demo`下`GoDLL`文件夹
+
 ### 2024.4.1
 
 1. 新增计划任务隐藏

