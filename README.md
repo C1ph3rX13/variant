@@ -1,6 +1,6 @@
 # variant
 
-Go Anti-Virus Framework
+Golang Malware Framework
 
 ## Description
 
