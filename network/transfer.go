@@ -22,7 +22,7 @@ func (transfer Transfer) execCmd(args []string) string {
 	return string(output)
 }
 
-func (transfer Transfer) CurlUpload() string {
+func (transfer Transfer) TransferUpload() string {
 	curlArgs := []string{
 		"curl",
 		"--upload-file",

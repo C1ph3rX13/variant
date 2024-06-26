@@ -14,6 +14,12 @@ Golang Malware Framework
 
 ### 更新日志
 
+### 2024.6.26
+
+1. `hook`模块重构，现支持`etwpatch`，`selfdelete`
+2. `dynamic`模块重构，现支持`获取任意URL资源 SHA256 的指定切片`，`新增对AES和DES Key和IV生成位数限制`
+3. `network`模块优化，所有的请求方式均支持代理（可选），优化客户端的仿真设置
+
 ### 2024.5.13
 
 1. 新增`DLL`编译：指定`DllBase.tmpl`模板，使用`BuildMode: "c-shared"`
