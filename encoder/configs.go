@@ -1,4 +1,4 @@
-package enc
+package encoder
 
 type Payload struct {
 	PlainText string // 原始 Payload

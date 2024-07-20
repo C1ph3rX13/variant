@@ -1,0 +1,59 @@
+package tmpl
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"text/template"
+	"variant/rand"
+)
+
+type TOpts struct {
+	KeyName    string // key 变量名
+	KeyValue   string // key 值
+	IvName     string // iv  变量名
+	IvValue    string // iv  值
+	CipherText string // 保存加密文本的变量名
+	PlainText  string // 保存解密文本的变量名
+	MethodName string // 函数名
+	Payload    string // 加密 shellcode
+}
+
+func (tOpts *TOpts) BuildTmpl(tmplDir, outputDir string) error {
+	// 读取指定文件夹中的模板
+	tmplFiles, err := GetTmplFiles(tmplDir)
+	if err != nil {
+		return fmt.Errorf("<getTmplFiles()> err: %s", err)
+	}
+
+	// 逐一读取模板文件内容
+	for _, tmplFile := range tmplFiles {
+		tmplContent, err := os.ReadFile(tmplFile)
+		if err != nil {
+			return fmt.Errorf("<os.ReadFile()> err: %s", err)
+		}
+
+		// 创建模板对象
+		tmpl, err := template.New(filepath.Base(tmplFile)).Parse(string(tmplContent))
+		if err != nil {
+			return fmt.Errorf("<template.New()> err: %s", err)
+		}
+
+		// Go 文件命名
+		goName := filepath.Join(outputDir, fmt.Sprintf("%s.go", rand.RStrings()))
+
+		// 创建 Go 文件
+		outputFile, err := os.Create(goName)
+		if err != nil {
+			return fmt.Errorf("<os.Create()> err: %s", err)
+		}
+
+		// 渲染 Go 模板
+		err = tmpl.Execute(outputFile, tOpts)
+		if err != nil {
+			return fmt.Errorf("<tmpl.Execute()> err: %s", err)
+		}
+	}
+
+	return nil
+}

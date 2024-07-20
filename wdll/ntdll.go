@@ -69,3 +69,7 @@ func NtQueryInformationThread() *syscall.LazyProc {
 func RtlCreateUserThread() *syscall.LazyProc {
 	return NewLazyDLLAndProc(ntdllDLL, rtlCreateUserThread)
 }
+
+func NtQueryInformationProcess() *syscall.LazyProc {
+	return NewLazyDLLAndProc(ntdllDLL, ntQueryInformationProcess)
+}

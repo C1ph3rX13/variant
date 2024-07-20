@@ -8,6 +8,7 @@ type TmplOpts struct {
 }
 
 type Data struct {
+	DllFunc       string
 	CipherText    string      // 保存加密文本的变量名
 	PlainText     string      // 保存解密文本的变量名
 	DecryptMethod string      // 解密方法

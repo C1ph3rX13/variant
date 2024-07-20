@@ -31,7 +31,7 @@ func SelectDecrypt() (string, error) {
 	return randSelect(functions)
 }
 
-// SelectEncrypt demo
+// SelectEncrypt PokemonDemo
 func SelectEncrypt() (string, error) {
 	functions, err := GetExportedFuncsFromFolder(CryptoPath, 0)
 	if err != nil {

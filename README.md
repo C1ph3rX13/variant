@@ -14,6 +14,18 @@ Golang Malware Framework
 
 ### 更新日志
 
+### 2024.7.20
+
+1. `enc`模块改名`encoder`
+2. `encoder`模块新增降熵方法`ReduceEntropy()`、恢复方法`ReverseEntropy()`
+3. `render`模块`TmplRender()`方法更新，符合整体设计逻辑
+
+```go
+func (tOpts TmplOpts) TmplRender() error {}
+```
+
+4. `wdll`模块更新，添加更多API
+
 ### 2024.6.26
 
 1. `hook`模块重构，现支持`etwpatch`，`selfdelete`
