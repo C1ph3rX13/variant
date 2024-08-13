@@ -14,6 +14,10 @@ Golang Malware Framework
 
 ### 更新日志
 
+### 2024.8.13
+
+1. 新增`cloader`模块，使用`CGO`调用`C`，代码更简洁
+
 ### 2024.7.20
 
 1. `enc`模块改名`encoder`
