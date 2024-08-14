@@ -14,6 +14,12 @@ Golang Malware Framework
 
 ### 更新日志
 
+### 2024.8.14
+
+1. `cloader`模块新增 23 个`CGO`类型 loader
+2. 跟随编译需求更新`initialize.bat`，新增依赖检查
+3. `xwindows`模块文档完善，新增 20+ API （详情见：[xwindows](https://github.com/C1ph3rX13/xwindows) 仓库）
+
 ### 2024.8.13
 
 1. 新增`cloader`模块，使用`CGO`调用`C`，代码更简洁
