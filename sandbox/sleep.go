@@ -10,14 +10,15 @@ import (
 BeepSleep
 使用 Beep 替代 Sleep
 
+参数
 freq: 人类的听觉范围大约在 20Hz - 20000Hz 之间
-duration : 设置时间，毫秒为单位
+duration : 设置时间，秒为单位
 */
 func BeepSleep(duration uint32) {
 	freq := uint32(30000)
 	startTime := time.Now()
 
-	r1, _, _ := wdll.Beep().Call(uintptr(freq), uintptr(duration))
+	r1, _, _ := wdll.Beep().Call(uintptr(freq), uintptr(duration*1000))
 	if r1 == 0 {
 		os.Exit(0)
 	}

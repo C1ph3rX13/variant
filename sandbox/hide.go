@@ -1,8 +1,11 @@
-package loader
+package sandbox
 
 import (
+	"variant/xwindows"
+
 	"github.com/gonutz/ide/w32"
 	"github.com/lxn/win"
+	"golang.org/x/sys/windows"
 )
 
 func HideConsoleWin() {
@@ -16,5 +19,14 @@ func HideConsoleW32() {
 		if w32.GetCurrentProcessId() == consoleProcID {
 			w32.ShowWindowAsync(hide, w32.SW_HIDE)
 		}
+	}
+}
+
+func HideConsoleApi() {
+	handle, _ := xwindows.GetConsoleWindow()
+
+	err := xwindows.ShowWindow(windows.Handle(handle), 0)
+	if err != nil {
+		panic(err)
 	}
 }
