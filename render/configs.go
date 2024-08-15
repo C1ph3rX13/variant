@@ -8,29 +8,28 @@ type TmplOpts struct {
 }
 
 type Data struct {
-	DllFunc       string
-	CipherText    string      // 保存加密文本的变量名
-	PlainText     string      // 保存解密文本的变量名
-	DecryptMethod string      // 解密方法
-	Pokemon       interface{} // Pokemon Shellcode
-	Loader        interface{} // loader
-	SandBox       interface{} // 反沙箱模块
-	Local         interface{} // 本地加载模块
-	Remote        interface{} // 远程加载模块
-	Args          interface{} // 参数加载模块
-	Compressor    interface{} // 压缩算法模块
-	Apart         interface{} // 分离加载模块
-	Dynamic       interface{} // 动态数据
+	CipherText string      // 保存加密文本的变量名
+	PlainText  string      // 保存解密文本的变量名
+	DLLibrary  interface{} // Dynamic Link Library - DLL
+	Pokemon    interface{} // Pokemon 加载模式
+	Loader     interface{} // 加载器
+	SandBox    interface{} // 反沙箱模块
+	Local      interface{} // 本地加载模块
+	Remote     interface{} // 远程加载模块
+	Args       interface{} // 参数加载模块
+	Compressor interface{} // 压缩算法模块
+	Apart      interface{} // 分离加载模块
+	Dynamic    interface{} // 动态数据
 }
 
 type Loader struct {
+	Import string // 导入库
 	Method string // loader
-	Hide   string // 隐藏方法
 }
 
 type SandBox struct {
 	Import  string   // 导入库
-	Methods []string // 反沙箱方法, 批量渲染
+	Methods []string // 反沙箱函数
 }
 
 type Compressor struct {
@@ -40,11 +39,13 @@ type Compressor struct {
 }
 
 type Local struct {
-	KeyName  string      // Key 变量名
-	KeyValue string      // Key 值
-	IvName   string      // Iv  变量名
-	IvValue  string      // Iv  值
-	Payload  interface{} // 加密 shellcode
+	KeyName      string      // Key 变量名
+	KeyValue     string      // Key 值
+	IvName       string      // Iv  变量名
+	IvValue      string      // Iv  值
+	Payload      interface{} // 加密 shellcode
+	DecryptLocal string      // 解密函数
+	MainLocal    string      // 本地加载方法名
 }
 
 type Remote struct {
@@ -56,20 +57,32 @@ type Remote struct {
 }
 
 type Dynamic struct {
-	Import        string // 导入库
-	DynamicUrl    string // 动态获取 Key
-	DynamicMethod string // 动态函数
-	KeyName       string // Key 变量名
-	DynamicKey    string // 动态获取 Key
-	KeyStart      int    // Key 动态区间
-	KeyEnd        int    // Key 动态区间
-	IVName        string // IV 变量名
-	DynamicIV     string // 动态获取 IV
-	IVStart       int    // IV 动态区间
-	IVEnd         int    // IV 动态区间
+	Import         string // 导入库
+	DynamicUrl     string // 动态获取 Key
+	DynamicMethod  string // 动态函数
+	MainDynamic    string // 动态加载函数名
+	DecryptDynamic string // 解密函数
+	KeyName        string // Key 变量名
+	DynamicKey     string // 动态获取 Key
+	KeyStart       int    // Key 动态起始区间
+	KeyEnd         int    // Key 动态结束区间
+	IVName         string // IV 变量名
+	DynamicIV      string // 动态获取 IV
+	IVStart        int    // IV 动态起始区间
+	IVEnd          int    // IV 动态结束区间
 }
 
 type Args struct {
 	Import  string // 导入库
 	ArgsKey string // 参数加载设置的密钥
+}
+
+type Pokemon struct {
+	PokemonPayload []string // Pokemon 加密数组
+	MainPokemon    string   // Pokemon 函数名
+	DecryptPokemon string   // 解密函数
+}
+
+type DLLibrary struct {
+	DllFuncName string // 导出DLL函数名
 }

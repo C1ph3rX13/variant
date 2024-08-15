@@ -14,6 +14,14 @@ Golang Malware Framework
 
 ### 更新日志
 
+## 2024.8.15
+
+1. 更新`render`模块，支持新增的`cloader`，模板渲染调用结构体优化
+2. 更新渲染模板`v5`，支持新增的`cloader`
+3. `demo`更新，适配其他模块的更新
+4. `Hide Cmd`隐藏执行窗口的函数移动到`sandbox`模块
+5. `DLL`渲染模板和调用方式更新
+
 ### 2024.8.14
 
 1. `cloader`模块新增 23 个`CGO`类型 loader

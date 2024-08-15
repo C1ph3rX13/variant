@@ -8,6 +8,7 @@ import (
 )
 
 func (tOpts TmplOpts) TmplRender() error {
+	// 读取编译模板
 	content, err := os.ReadFile(tOpts.TmplFile)
 	if err != nil {
 		return fmt.Errorf("<os.ReadFile()> err: %s", err)

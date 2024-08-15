@@ -6,17 +6,19 @@ import (
 	"reflect"
 )
 
-func (payload Payload) SetKeyIV(sign interface{}) (string, error) {
-	if len(payload.PlainText) == 0 {
+// SetKeyIV 16bit
+// 根据传入的加密函数签名进行反射调用获取返回值
+func (p Payload) SetKeyIV(sign interface{}) (string, error) {
+	if len(p.PlainText) == 0 {
 		return "", errors.New("plaintext is empty")
 	}
 
-	binRaw, err := BinReader(payload.PlainText)
+	binRaw, err := BinReader(p.PlainText)
 	if err != nil {
 		return "", fmt.Errorf("failed to read binary data: %w", err)
 	}
 
-	if len(payload.Key) != 16 && len(payload.IV) != 16 {
+	if len(p.Key) != 16 && len(p.IV) != 16 {
 		return "", fmt.Errorf("the length of key and iv should be greater equal to 16")
 	}
 
@@ -36,10 +38,10 @@ func (payload Payload) SetKeyIV(sign interface{}) (string, error) {
 		// 创建参数值切片
 		params := make([]reflect.Value, numParams)
 		params[0] = reflect.ValueOf(binRaw)
-		params[1] = reflect.ValueOf(payload.Key)
+		params[1] = reflect.ValueOf(p.Key)
 
 		if numParams == 3 {
-			params[2] = reflect.ValueOf(payload.IV)
+			params[2] = reflect.ValueOf(p.IV)
 		}
 
 		// 调用函数并获取结果
@@ -64,12 +66,14 @@ func (payload Payload) SetKeyIV(sign interface{}) (string, error) {
 	}
 }
 
-func (payload Payload) NoKeyIV(sign interface{}) (string, error) {
-	if len(payload.PlainText) == 0 {
+// NoKeyIV
+// 根据传入的加密函数签名进行反射调用获取返回值
+func (p Payload) NoKeyIV(sign interface{}) (string, error) {
+	if len(p.PlainText) == 0 {
 		return "", errors.New("plaintext is empty")
 	}
 
-	binRaw, err := BinReader(payload.PlainText)
+	binRaw, err := BinReader(p.PlainText)
 	if err != nil {
 		return "", fmt.Errorf("failed to read binary data: %w", err)
 	}
@@ -109,12 +113,12 @@ func (payload Payload) NoKeyIV(sign interface{}) (string, error) {
 	}
 }
 
-func (payload Payload) PokemonStrings(sign interface{}) ([]string, error) {
-	if len(payload.PlainText) == 0 {
+func (p Payload) PokemonStrings(sign interface{}) ([]string, error) {
+	if len(p.PlainText) == 0 {
 		return nil, errors.New("plaintext is empty")
 	}
 
-	binRaw, err := BinReader(payload.PlainText)
+	binRaw, err := BinReader(p.PlainText)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read binary data: %w", err)
 	}
