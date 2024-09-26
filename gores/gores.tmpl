@@ -1,0 +1,60 @@
+{
+  "RT_GROUP_ICON": {
+    "APP": {
+      "0000": [
+        "{{.ICOName}}"
+      ]
+    }
+  },
+  "RT_MANIFEST": {
+    "#1": {
+      "0409": {
+        "identity": {
+          "name": "{{.Name}}",
+          "version": "{{.Version}}"
+        },
+        "description": "{{.Description}}",
+        "minimum-os": "{{.MinimumOs}}",
+        "execution-level": "{{.ExecutionLevel}}",
+        "ui-access": {{.UIAccess}},
+        "auto-elevate": {{.AutoElevate}},
+        "dpi-awareness": "{{.DpiAwareness}}",
+        "disable-theming": {{.DisableTheming}},
+        "disable-window-filtering": {{.DisableWindowFiltering}},
+        "high-resolution-scrolling-aware": {{.HighResolutionScrollingAware}},
+        "ultra-high-resolution-scrolling-aware": {{.UltraHighResolutionScrollingAware}},
+        "long-path-aware": {{.LongPathAware}},
+        "printer-driver-isolation": {{.PrinterDriverIsolation}},
+        "gdi-scaling": {{.GDIScaling}},
+        "segment-heap": {{.SegmentHeap}},
+        "use-common-controls-v6": {{.UseCommonControlsV6}}
+      }
+    }
+  },
+  "RT_VERSION": {
+    "#1": {
+      "0000": {
+        "fixed": {
+          "file_version": "{{.FixedFileVersion}}",
+          "product_version": "{{.FixedProductVersion}}"
+        },
+        "info": {
+          "0409": {
+            "Comments": "{{.Comments}}",
+            "CompanyName": "{{.CompanyName}}",
+            "FileDescription": "{{.FileDescription}}",
+            "FileVersion": "{{.FileVersion}}",
+            "InternalName": "{{.InternalName}}",
+            "LegalCopyright": "{{.LegalCopyright}}",
+            "LegalTrademarks": "{{.LegalTrademarks}}",
+            "OriginalFilename": "{{.OriginalFilename}}",
+            "PrivateBuild": "{{.PrivateBuild}}",
+            "ProductName": "{{.ProductName}}",
+            "ProductVersion": "{{.ProductVersion}}",
+            "SpecialBuild": "{{.SpecialBuild}}"
+          }
+        }
+      }
+    }
+  }
+}

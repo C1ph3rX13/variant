@@ -54,7 +54,7 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo [+] Installing garble
-go install mvdan.cc/garble@latest 2>"%ERROR_LOG%"
+go install mvdan.cc/garble@master 2>"%ERROR_LOG%"
 if %ERRORLEVEL% neq 0 (
     echo [-] Error installing garble. Exiting.
     type "%ERROR_LOG%"
