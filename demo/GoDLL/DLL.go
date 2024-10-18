@@ -14,7 +14,7 @@ import (
 func main() {
 	// 设置加密参数
 	params := encoder.Payload{
-		PlainText: "output/payload.bin",
+		PlainText: "output/calc.bin",
 		FileName:  rand.RStrings(),
 		Path:      "output",
 		Key:       rand.LByteStrings(16),
@@ -56,7 +56,7 @@ func main() {
 
 	// 设置模板的渲染参数
 	tOpts := render.TmplOpts{
-		TmplFile:     "render/templates/v5/Dll.tmpl",
+		TmplFile:     "render/templates/v6/Dll.tmpl",
 		OutputDir:    "output",
 		OutputGoName: fmt.Sprintf("%s.go", rand.RStrings()),
 		Data:         data,
