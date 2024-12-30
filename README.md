@@ -10,7 +10,7 @@ Docs：[Install | variant](https://github.com/C1ph3rX13/variant/tree/main/docs/I
 
 ## Update
 
-## 2024.12.30
+### 2024.12.30
 
 1. 说明文档更新：安装和代码使用
 
