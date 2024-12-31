@@ -13,7 +13,7 @@ func XorAesHexBase85Encrypt(plainText, key, iv []byte) (string, error) {
 	}
 
 	// AES 加密
-	aesEncrypt, err := AESCbcEncrypt(xorEncode, key, iv)
+	aesEncrypt, err := AESCBCEncrypt(xorEncode, key, iv)
 	if err != nil {
 		return "", nil
 	}
@@ -48,7 +48,7 @@ func XorAesHexBase85Decrypt(cipherText string, key, iv []byte) ([]byte, error) {
 	hexDecode = hexDecode[:n]
 
 	// AES 解密
-	aesDecrypt, err := AESCbcDecrypt(hexDecode, key, iv)
+	aesDecrypt, err := AESCBCDecrypt(hexDecode, key, iv)
 	if err != nil {
 		return nil, err
 	}

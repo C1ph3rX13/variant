@@ -18,10 +18,6 @@ func (p Payload) SetKeyIV(sign interface{}) (string, error) {
 		return "", fmt.Errorf("failed to read binary data: %w", err)
 	}
 
-	if len(p.Key) != 16 && len(p.IV) != 16 {
-		return "", fmt.Errorf("the length of key and iv should be greater equal to 16")
-	}
-
 	// 获取签名函数的值和类型
 	// Never obfuscate the Message type.
 	signValue := reflect.ValueOf(sign)

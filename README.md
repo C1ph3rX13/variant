@@ -8,7 +8,49 @@ Golang Malware Framework
 
 Docs：[Install | variant](https://github.com/C1ph3rX13/variant/tree/main/docs/Install.md)，[Usage | variant](https://github.com/C1ph3rX13/variant/tree/main/docs/Usage.md)
 
+Quick：
+
+```cmd
+go run .\demo\Base\main.go
+```
+
 ## Update
+
+### 2024.12.31
+
+1. `build`模块，重构编译方法和签名方法
+
+   ```go
+   // GoCompile 使用GoCompiler进行编译
+   func (c CompileOpts) GoCompile() error
+   
+   // GarbleCompile 使用GarbleCompiler进行编译
+   func (c CompileOpts) GarbleCompile() error
+   
+   // SaveCertificate 将证书表保存到指定文件
+   func (ct *CertThief) SaveCertificate() error
+   
+   // SignWithStolenCert 使用窃取的证书对源文件进行签名
+   func (ct *CertThief) SignWithStolenCert() error
+   
+   // SignExecutable 使用目标文件的证书对源文件进行签名
+   func (ct *CertThief) SignExecutable() error
+   ```
+
+2. `build`模块，新增文件命名 / 格式化函数
+
+   ```go
+   // RenameGoTrimSuffix 删除文件名 .go 后缀，重命名为 .exe
+   func RenameGoTrimSuffix(name string) string
+   
+   // RandomGoFile 随机命名 Go 代码文件
+   func RandomGoFile() string
+   
+   // RenameSignedPEName 命名签名后的PE文件
+   func RenameSignedPEName(name string) string
+   ```
+
+3. 完善 demo，详情查看 [Usage | variant](https://github.com/C1ph3rX13/variant/tree/main/docs/Usage.md)
 
 ### 2024.12.30
 

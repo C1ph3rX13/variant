@@ -6,7 +6,7 @@ import (
 
 func AesBase32Encrypt(plainText, key, iv []byte) (string, error) {
 	// AES 加密
-	aesEncrypt, err := AESCbcEncrypt(plainText, key, iv)
+	aesEncrypt, err := AESCBCEncrypt(plainText, key, iv)
 	if err != nil {
 		return "", nil
 	}
@@ -28,7 +28,7 @@ func AesBase32Decrypt(cipherText string, key, iv []byte) ([]byte, error) {
 	}
 
 	// AES 解密
-	aesDecrypt, err := AESCbcDecrypt(base32Decode, key, iv)
+	aesDecrypt, err := AESCBCDecrypt(base32Decode, key, iv)
 	if err != nil {
 		return nil, err
 	}

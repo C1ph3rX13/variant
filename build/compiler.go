@@ -8,27 +8,125 @@ import (
 	"variant/log"
 )
 
-func (c CompileOpts) GoCompile() error {
-	return c.compile("go")
+// Compiler 接口定义
+type Compiler interface {
+	BuildCompilerArgs() []string
 }
 
-func (c CompileOpts) GarbleCompile() error {
-	return c.compile("garble")
+// GoCompiler 具体编译器实现
+type GoCompiler struct {
+	HideConsole bool
+	BuildMode   string
+	ExeFileName string
+	GoFileName  string
 }
 
-func (c CompileOpts) compile(cmd string) error {
-	// 预先格式化代码
+// NewGoCompiler 创建GoCompiler实例
+func NewGoCompiler(c CompileOpts) *GoCompiler {
+	return &GoCompiler{
+		HideConsole: c.HideConsole,
+		BuildMode:   c.BuildMode,
+		ExeFileName: c.ExeFileName,
+		GoFileName:  c.GoFileName,
+	}
+}
+
+// BuildCompilerArgs 构建Go编译命令参数
+func (gc *GoCompiler) BuildCompilerArgs() []string {
+	var compilerArgs []string
+	compilerArgs = append(compilerArgs, "-s", "-w")
+
+	if gc.HideConsole {
+		compilerArgs = append(compilerArgs, "-H", "windowsgui")
+		log.Infof("HideConsole: %v", gc.HideConsole)
+	}
+	if gc.BuildMode != "" {
+		compilerArgs = append(compilerArgs, "-buildmode", gc.BuildMode)
+		log.Infof("BuildMode: %v", gc.BuildMode)
+	}
+
+	return []string{
+		"go",
+		"build",
+		"-ldflags", strings.Join(compilerArgs, " "),
+		"-o", gc.ExeFileName,
+		"-trimpath", gc.GoFileName,
+	}
+}
+
+// GarbleCompiler 具体编译器实现
+type GarbleCompiler struct {
+	GDebug      bool
+	Tiny        bool
+	Literals    bool
+	GSeed       bool
+	HideConsole bool
+	BuildMode   string
+	ExeFileName string
+	GoFileName  string
+}
+
+// NewGarbleCompiler 创建GarbleCompiler实例
+func NewGarbleCompiler(c CompileOpts) *GarbleCompiler {
+	return &GarbleCompiler{
+		GDebug:      c.GDebug,
+		Tiny:        c.Tiny,
+		Literals:    c.Literals,
+		GSeed:       c.GSeed,
+		HideConsole: c.HideConsole,
+		BuildMode:   c.BuildMode,
+		ExeFileName: c.ExeFileName,
+		GoFileName:  c.GoFileName,
+	}
+}
+
+// BuildCompilerArgs 构建Garble编译命令参数
+func (gc *GarbleCompiler) BuildCompilerArgs() []string {
+	var garbleCompilerArgs []string
+	garbleCompilerArgs = append(garbleCompilerArgs, "garble")
+
+	if gc.GDebug {
+		garbleCompilerArgs = append(garbleCompilerArgs, "-debug")
+	}
+	if gc.Tiny {
+		garbleCompilerArgs = append(garbleCompilerArgs, "-tiny")
+	}
+	if gc.Literals {
+		garbleCompilerArgs = append(garbleCompilerArgs, "-literals")
+	}
+	if gc.GSeed {
+		garbleCompilerArgs = append(garbleCompilerArgs, "-seed=random")
+	}
+
+	var goCompilerArgs []string
+	if gc.HideConsole {
+		goCompilerArgs = append(goCompilerArgs, "-H", "windowsgui")
+		log.Infof("HideConsole: %v", gc.HideConsole)
+	}
+	if gc.BuildMode != "" {
+		goCompilerArgs = append(goCompilerArgs, "-buildmode", gc.BuildMode)
+		log.Infof("BuildMode: %v", gc.BuildMode)
+	}
+
+	var compilerArgs []string
+	compilerArgs = append(garbleCompilerArgs, "build", "-ldflags=-s -w")
+	compilerArgs = append(compilerArgs, goCompilerArgs...)
+	compilerArgs = append(compilerArgs, "-o", gc.ExeFileName, "-trimpath", gc.GoFileName)
+
+	return compilerArgs
+}
+
+// compile 使用Compiler接口进行编译
+func (c CompileOpts) compile(comp Compiler) error {
 	if err := c.formatCode(); err != nil {
 		return err
 	}
 
-	// 根据条件构建编译命令
-	cmdArgs := c.buildCmdArgs(cmd)
+	compilerArgs := comp.BuildCompilerArgs()
 
-	// 执行编译
 	log.Infof("CompilePath: %v", c.CompilePath)
-	log.Infof("Compiling: %v", cmdArgs)
-	if err := c.execCmd(cmdArgs); err != nil {
+	log.Infof("Compiling: %v", compilerArgs)
+	if err := c.execCmd(compilerArgs); err != nil {
 		return err
 	}
 	log.Infof("Compile Succeeded: %s", c.ExeFileName)
@@ -36,56 +134,22 @@ func (c CompileOpts) compile(cmd string) error {
 	return nil
 }
 
+// GoCompile 使用GoCompiler进行编译
+func (c CompileOpts) GoCompile() error {
+	comp := NewGoCompiler(c)
+	return c.compile(comp)
+}
+
+// GarbleCompile 使用GarbleCompiler进行编译
+func (c CompileOpts) GarbleCompile() error {
+	comp := NewGarbleCompiler(c)
+	return c.compile(comp)
+}
+
 func (c CompileOpts) formatCode() error {
 	fmtCmd := []string{"goimports", "-w", c.GoFileName}
 	log.Infof("Formatting Code: %v", fmtCmd)
-
 	return c.execCmd(fmtCmd)
-}
-
-// buildCmdArgs 根据 CompileOpts 参数构建编译命令的参数列表
-func (c CompileOpts) buildCmdArgs(cmd string) []string {
-	var (
-		ldflagsBuilder strings.Builder
-		cmdArgs        []string
-	)
-
-	ldflagsBuilder.WriteString("-s -w")
-	if c.HideConsole {
-		ldflagsBuilder.WriteString(" -H windowsgui")
-		log.Infof("HideConsole: %v", c.HideConsole)
-	}
-
-	// 编译模式, go help buildmode
-	if c.BuildMode != "" {
-		ldflagsBuilder.WriteString(fmt.Sprintf(" -buildmode=%s", c.BuildMode))
-		log.Infof("BuildMode: %v", c.BuildMode)
-	}
-
-	cmdArgs = []string{cmd}
-	if cmd == "garble" {
-		if c.GDebug {
-			cmdArgs = append(cmdArgs, "-debug")
-		}
-		if c.Tiny {
-			cmdArgs = append(cmdArgs, "-tiny")
-		}
-		if c.Literals {
-			cmdArgs = append(cmdArgs, "-literals")
-		}
-		if c.GSeed {
-			cmdArgs = append(cmdArgs, "-seed=random")
-		}
-	}
-
-	cmdArgs = append(cmdArgs,
-		"build",
-		"-ldflags="+ldflagsBuilder.String(),
-		"-o", c.ExeFileName,
-		"-trimpath", c.GoFileName,
-	)
-
-	return cmdArgs
 }
 
 func (c CompileOpts) execCmd(args []string) error {
@@ -99,8 +163,7 @@ func (c CompileOpts) execCmd(args []string) error {
 
 	err := cmd.Run()
 	if err != nil {
-		return fmt.Errorf("%s failed: %v", cmd, err)
+		return fmt.Errorf("command %q failed: %v", args[0], err)
 	}
-
 	return nil
 }
