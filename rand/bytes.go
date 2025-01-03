@@ -6,23 +6,17 @@ import (
 )
 
 func LBytes(length int) ([]byte, error) {
-	bytes := make([]byte, length)
+	b := make([]byte, length)
 
-	_, err := rand.Read(bytes)
+	_, err := rand.Read(b)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate rand bytes: %w", err)
 	}
 
-	return bytes, nil
-}
-
-func Bytes16Bit() []byte {
-	bytes := make([]byte, 16)
-	_, _ = rand.Read(bytes)
-	return bytes
+	return b, nil
 }
 
 func LByteStrings(length int) []byte {
-	byteString := LStrings(length)
-	return []byte(byteString)
+	bString := RandomLetters(length)
+	return []byte(bString)
 }

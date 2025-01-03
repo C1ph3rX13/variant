@@ -2,48 +2,46 @@ package rand
 
 import (
 	"math/rand"
-	"time"
 	"variant/compress"
 )
 
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-var random = rand.New(rand.NewSource(time.Now().UnixNano()))
+// RandomLetters 随机生成指定长度的 a-z 或 A-Z 的字符串
+func RandomLetters(len int) string {
+	b := make([]byte, len)
+	for i := range b {
+		if rand.Intn(2) == 0 {
+			b[i] = byte(rand.Intn(26)) + 'a'
+		} else {
+			b[i] = byte(rand.Intn(26)) + 'A'
+		}
+	}
+	return string(b)
+}
 
 // LStrings 生成指定长度的字符串
-func LStrings(length int) string {
-	b := make([]rune, length)
-
-	for i := range b {
-		b[i] = letters[random.Intn(len(letters))]
-	}
-
-	return string(b)
+func LStrings(len int) string {
+	length := rand.Intn(len) + 2
+	return RandomLetters(length)
 }
 
-// RStrings 生成随机长度(2-18)的字符串
+// RStrings 随机生成长度为 2-18 的字符串
 func RStrings() string {
-	rand.New(rand.NewSource(time.Now().UnixNano()))
-	b := make([]rune, rand.Intn(16)+2)
-
-	for i := range b {
-		b[i] = letters[random.Intn(len(letters))]
-	}
-
-	return string(b)
+	length := rand.Intn(16) + 2
+	return RandomLetters(length)
 }
 
-// LzwStrings 生成指定长度的字符串，返回 lzw 压缩后的字符串
-func LzwStrings(length int) string {
+// LZWStrings 生成指定长度的字符串，返回 LZW 压缩后的字符串
+func LZWStrings(length int) string {
 	b := LStrings(length)
 	lzwStrings, _ := compress.LzwCompress([]byte(b), 8)
 
 	return lzwStrings
 }
 
-// ZstdStrings 生成指定长度的字符串，返回 zstd 压缩后的字符串
-func ZstdStrings(length int) string {
+// ZSTDStrings 生成指定长度的字符串，返回 ZSTD 压缩后的字符串
+func ZSTDStrings(length int) string {
 	b := LStrings(length)
-	lzwStrings, _ := compress.ZstdCompress(b)
+	lzwStrings, _ := compress.ZSTDCompress(b)
 
 	return lzwStrings
 }

