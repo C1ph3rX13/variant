@@ -5,18 +5,20 @@ type CompileOpts struct {
 	ExeFileName string // Exe 文件名称
 	CompilePath string // 编译路径
 	HideConsole bool   // 编译隐藏控制台
-	GDebug      bool   // 开启Debug日志
-	GSeed       bool   // 随机 Base64 编码的种子
-	Literals    bool   // 对字符串和数字字面量进行混淆
-	Tiny        bool   // 最小化构建
 	BuildMode   string // 构建模式, 推荐值:pie
+
+	// Garble 专用参数
+	GDebug    bool // 开启Debug日志
+	GSeed     bool // 随机 Base64 编码的种子
+	GLiterals bool // 对字符串和数字字面量进行混淆
+	GTiny     bool // 最小化构建
 }
 
 type UpxOpts struct {
 	Level   string // 压缩等级
 	SrcExe  string // 目标文件
 	SrcPath string // 压缩目录
-	UpxPath string // upx.exe文件目录
+	UpxPath string // upx.exe 文件目录
 	Keep    bool   // 保留原始文件
 	Force   bool   // 强制压缩
 }
