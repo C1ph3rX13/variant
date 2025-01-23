@@ -1,4 +1,4 @@
-package alive
+package persistence
 
 import (
 	"encoding/xml"
@@ -101,7 +101,7 @@ func RegisterXML(cmdArgs string) string {
 
 	xmlBytes, err := xml.MarshalIndent(taskXML, "", "    ")
 	if err != nil {
-		log.Fatalf("Error marshalling XML:", err)
+		log.Fatalf("Error marshalling XML: %v", err)
 	}
 
 	// 切换XML头的编码为UTF-16

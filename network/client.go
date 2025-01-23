@@ -9,41 +9,42 @@ import (
 	"github.com/imroc/req/v3"
 )
 
+// 通用配置参数
+const (
+	requestTimeout = 10 * time.Second
+	maxRedirects   = 10
+	retryCount     = 3
+)
+
+// CreateRestyClient 创建预配置的Resty客户端
 func CreateRestyClient() *resty.Client {
-	client := resty.New().
+	return resty.New().
 		SetHeaders(GetRandomAgent()).
 		SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}).
-		SetTimeout(10 * time.Second).
-		SetRedirectPolicy(resty.FlexibleRedirectPolicy(10)).
-		SetRetryCount(3)
-
-	return client
+		SetTimeout(requestTimeout).
+		SetRedirectPolicy(resty.FlexibleRedirectPolicy(maxRedirects)).
+		SetRetryCount(retryCount)
 }
 
+// CreateHttpClient 创建标准库HTTP客户端
 func CreateHttpClient() *http.Client {
-	// 忽略证书
-	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	return &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+		CheckRedirect: func(*http.Request, []*http.Request) error { // 简化匿名函数
+			return http.ErrUseLastResponse
+		},
+		Timeout: requestTimeout,
 	}
-	client := &http.Client{
-		Transport: transport,
-	}
-
-	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-		return http.ErrUseLastResponse
-	}
-
-	client.Timeout = time.Second * 10
-
-	return client
 }
 
+// CreateReqClient 创建Req客户端
 func CreateReqClient() *req.Client {
-	client := req.C().
+	return req.C().
 		SetCommonHeaders(GetRandomAgent()).
 		SetTLSFingerprintChrome().
 		EnableInsecureSkipVerify().
-		DisableDebugLog()
-
-	return client
+		DisableDebugLog().
+		SetTimeout(requestTimeout) // 显式设置超时保持配置一致性
 }

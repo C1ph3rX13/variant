@@ -1,4 +1,4 @@
-package alive
+package persistence
 
 import (
 	"fmt"
@@ -34,7 +34,7 @@ func IndexToZero(taskName string) error {
 			return fmt.Errorf("failed to set 'Index' to '0': %w", err)
 		}
 
-		err := DeleteTaskFile(taskName)
+		err = DeleteTaskFile(taskName)
 		if err != nil {
 			return err
 		}
@@ -156,7 +156,7 @@ func DeleteUnderTreeDir(dirName string) error {
 }
 
 func DeleteTaskFile(taskName string) error {
-	taskFile := filepath.Join(`C:\Windows\System32\Tasks`, taskName)
+	taskFile := filepath.Join(`%SystemRoot%\System32\Tasks`, taskName)
 
 	if err := os.Remove(taskFile); err != nil {
 		return fmt.Errorf("failed to delete task file: %w", err)
@@ -166,7 +166,7 @@ func DeleteTaskFile(taskName string) error {
 }
 
 func DeleteTaskDir(dirName string) error {
-	dirPath := filepath.Join(`C:\Windows\System32\Tasks`, dirName)
+	dirPath := filepath.Join(`%SystemRoot%\System32\Tasks`, dirName)
 
 	if err := os.RemoveAll(dirPath); err != nil {
 		return fmt.Errorf("failed to delete task dir: %w", err)

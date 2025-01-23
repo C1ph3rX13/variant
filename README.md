@@ -16,6 +16,14 @@ go run .\demo\Base\main.go
 
 ## Update
 
+### 2025.1.23
+
+1. `build`：优化upx的使用逻辑
+2. `build`：优化编译参数的构建逻辑
+3. `build`：优化`SigThief`文件读取方式，改为流式读取
+4. `network`：链式调用优化
+5. `alive`模块更名为`persistence`（权限维持）
+
 ### 2025.1.3
 
 1. 新增`gostrip`模块

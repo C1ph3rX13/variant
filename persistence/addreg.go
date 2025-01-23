@@ -1,4 +1,4 @@
-package alive
+package persistence
 
 import (
 	"golang.org/x/sys/windows/registry"

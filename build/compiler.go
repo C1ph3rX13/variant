@@ -24,10 +24,10 @@ type GoCompiler struct {
 // NewGoCompiler 创建GoCompiler实例
 func NewGoCompiler(c CompileOpts) *GoCompiler {
 	return &GoCompiler{
-		HideConsole: c.HideConsole,
-		BuildMode:   c.BuildMode,
 		ExeFileName: c.ExeFileName,
 		GoFileName:  c.GoFileName,
+		HideConsole: c.HideConsole,
+		BuildMode:   c.BuildMode,
 	}
 }
 
@@ -56,27 +56,21 @@ func (gc *GoCompiler) BuildCompilerArgs() []string {
 
 // GarbleCompiler 具体编译器实现
 type GarbleCompiler struct {
-	GDebug      bool
-	Tiny        bool
-	Literals    bool
-	GSeed       bool
-	HideConsole bool
-	BuildMode   string
-	ExeFileName string
-	GoFileName  string
+	GoCompiler
+	GDebug    bool
+	GTiny     bool
+	GLiterals bool
+	GSeed     bool
 }
 
 // NewGarbleCompiler 创建GarbleCompiler实例
 func NewGarbleCompiler(c CompileOpts) *GarbleCompiler {
 	return &GarbleCompiler{
-		GDebug:      c.GDebug,
-		Tiny:        c.Tiny,
-		Literals:    c.Literals,
-		GSeed:       c.GSeed,
-		HideConsole: c.HideConsole,
-		BuildMode:   c.BuildMode,
-		ExeFileName: c.ExeFileName,
-		GoFileName:  c.GoFileName,
+		GoCompiler: *NewGoCompiler(c),
+		GDebug:     c.GDebug,
+		GTiny:      c.GTiny,
+		GLiterals:  c.GLiterals,
+		GSeed:      c.GSeed,
 	}
 }
 
@@ -88,10 +82,10 @@ func (gc *GarbleCompiler) BuildCompilerArgs() []string {
 	if gc.GDebug {
 		garbleCompilerArgs = append(garbleCompilerArgs, "-debug")
 	}
-	if gc.Tiny {
+	if gc.GTiny {
 		garbleCompilerArgs = append(garbleCompilerArgs, "-tiny")
 	}
-	if gc.Literals {
+	if gc.GLiterals {
 		garbleCompilerArgs = append(garbleCompilerArgs, "-literals")
 	}
 	if gc.GSeed {
