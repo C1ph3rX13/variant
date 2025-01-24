@@ -1,0 +1,3 @@
+[submodule "xwindows"]
+	path = xwindows
+	url = https://github.com/C1ph3rX13/xwindows.git
