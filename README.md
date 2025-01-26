@@ -16,6 +16,32 @@ go run .\demo\Base\main.go
 
 ## Update
 
+### 2025.1.26
+
+1. `loader`：修复bugs，新增多个`Enum`类型加载方式
+
+   ```go
+   func EnumChildWindowsX(shellcode []byte) error 
+   
+   func EnumerateLoadedModulesX(shellcode []byte) error 
+   
+   func EnumPageFilesWX(shellcode []byte) error 
+   
+   func EnumWindowsX(shellcode []byte) error 
+   
+   func EnumTimeFormatsAX(shellcode []byte) error 
+   
+   func EnumSystemLocalesAX(shellcode []byte) error 
+   
+   func EnumDesktopWindowsX(shellcode []byte) error
+   
+   func EnumThreadWindowsX(shellcode []byte) error
+   ```
+
+2. `loader`：逐渐统一使用`xwindows`作为支持
+
+3. `xwindows`：更新详情查阅 [C1ph3rX13 | xwindows](https://github.com/C1ph3rX13/xwindows)
+
 ### 2025.1.23
 
 1. `build`：优化upx的使用逻辑

