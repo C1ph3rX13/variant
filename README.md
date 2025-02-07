@@ -21,7 +21,12 @@ go run .\demo\Base\main.go
 1. `build`：更新编译流程，简化代码
 
    ```go
-   // 新增控制编结构
+   // 新增编译控制参数 UseGarble
+   // UseGarble 设置为 ture 即为使用 Garble 进行编译
+   
+   // 编译方法简化
+   // 删除 GoCompile() 和 GarbleCompile()，统一使用 Compile()
+   // UseGarble 设置为 true，即可使用 Garble 进行编译
    type CompileOpts struct {
    	GoFileName  string // Go 文件名称
    	ExeFileName string // Exe 文件名称
@@ -36,10 +41,6 @@ go run .\demo\Base\main.go
    	GLiterals bool // 对字符串和数字字面量进行混淆
    	GTiny     bool // 最小化构建
    }
-   
-   // 编译方法简化
-   // 删除 GoCompile() 和 GarbleCompile()，统一使用 Compile()
-   // UseGarble 设置为 true，即可使用 Garble 进行编译
    ```
 
 2. `loader`：删除`wdll`依赖，统一使用  [C1ph3rX13 | xwindows](https://github.com/C1ph3rX13/xwindows)
