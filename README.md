@@ -16,6 +16,70 @@ go run .\demo\Base\main.go
 
 ## Update
 
+### 2025.2.7
+
+1. `build`：更新编译流程，简化代码
+
+   ```go
+   // 新增控制编结构
+   type CompileOpts struct {
+   	GoFileName  string // Go 文件名称
+   	ExeFileName string // Exe 文件名称
+   	CompilePath string // 编译路径
+   	HideConsole bool   // 编译隐藏控制台
+   	BuildMode   string // 构建模式, 推荐值:pie
+   
+   	// Garble 专用参数
+   	UseGarble bool // Garble 编译
+   	GDebug    bool // 开启Debug日志
+   	GSeed     bool // 随机 Base64 编码的种子
+   	GLiterals bool // 对字符串和数字字面量进行混淆
+   	GTiny     bool // 最小化构建
+   }
+   
+   // 编译方法简化
+   // 删除 GoCompile() 和 GarbleCompile()，统一使用 Compile()
+   // UseGarble 设置为 true，即可使用 Garble 进行编译
+   ```
+
+2. `loader`：删除`wdll`依赖，统一使用  [C1ph3rX13 | xwindows](https://github.com/C1ph3rX13/xwindows)
+
+3. `loader`：修复 2025.1.26 更新中 `RtlIpv4StringToAddressA`无法调用的错误
+
+4. `Encoder`：优化`SetKeyIV`方法，可以判断传入函数签名来自动选择是否添加`key or iv`进行加密
+
+   ```go
+   // func (p Payload) SetKeyIV(sign interface{}) (string, error) 
+   // SetKeyIV() 方法最终调用的传入的加密函数后，会检查返回结果个数是否大于2个
+   // SetKeyIV() 方法经过加密后返回的类型为 string
+   // Pekomon 编码返回类型为 []string，需要使用专用方法 PokemonEncoder()
+   
+   // 调用函数并获取结果
+   	results := signVal.Call(params)
+   
+   	if len(results) < 2 {
+   		return "", errors.New("sign function does not return expected result")
+   	}
+   
+   	// 类型转换
+   	cipherText, ok := results[0].Interface().(string)
+   	if !ok {
+   		return "", errors.New("invalid ciphertext type")
+   	}
+   
+   	if errValue, errOk := results[1].Interface().(error); errOk && errValue != nil {
+   		return "", fmt.Errorf("encryption failed: %w", errValue)
+   	}
+   
+   	return cipherText, nil
+   ```
+
+5. `Encoder`：`PokemonStrings` 函数改名 `PokemonEncoder`，加密逻辑优化
+
+6. `demo`：本地加载、Pokenmon demo 更新
+
+7. `xwindows`：更新详情查阅 [C1ph3rX13 | xwindows](https://github.com/C1ph3rX13/xwindows)
+
 ### 2025.1.26
 
 1. `loader`：修复bugs，新增多个`Enum`类型加载方式
