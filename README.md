@@ -16,6 +16,12 @@ go run .\demo\Base\main.go
 
 ## Update
 
+### 2025.7.4
+
+v2.0 重构版本开发中，构建流程优化，提供更多快捷构建选项和基座能力……
+
+[Preview | variant v2.0](https://github.com/C1ph3rX13/variant/tree/v2.0)
+
 ### 2025.2.7
 
 1. `build`：更新编译流程，简化代码
