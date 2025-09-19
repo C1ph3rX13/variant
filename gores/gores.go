@@ -1,7 +1,7 @@
 package gores
 
 type GoWinRes struct {
-	CompilePath string // 编译目录
+	PatchDir    string // 编译目录
 	ExtractFile string // 需要提取资源文件的对象
 	ExtractDir  string // 提取对象资源存放路径
 	PatchFile   string // 需要添加资源文件的对象

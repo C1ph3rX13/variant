@@ -8,10 +8,12 @@ import (
 	"golang.org/x/sys/windows"
 )
 
+// HideConsoleWin 已被沙箱标记为 CobaltStrike
 func HideConsoleWin() {
 	win.ShowWindow(win.GetConsoleWindow(), win.SW_HIDE)
 }
 
+// HideConsoleW32 已被沙箱标记为 CobaltStrike
 func HideConsoleW32() {
 	hide := w32.GetConsoleWindow()
 	if hide != 0 {
@@ -22,6 +24,7 @@ func HideConsoleW32() {
 	}
 }
 
+// HideConsoleApi 已被沙箱标记为 CobaltStrike
 func HideConsoleApi() {
 	handle, _ := xwindows.GetConsoleWindow()
 

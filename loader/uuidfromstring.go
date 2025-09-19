@@ -14,7 +14,7 @@ func UUIDFromString(shellcode []byte) error {
 
 	uuids, err := ShellcodeToUUID(shellcode)
 	if err != nil {
-		return fmt.Errorf("error loading UUIDs from shellcode: %w", err)
+		return fmt.Errorf("error loading UUIDs from sc: %w", err)
 	}
 
 	// Create the heap
@@ -54,10 +54,10 @@ func UUIDFromString(shellcode []byte) error {
 	return nil
 }
 
-// ShellcodeToUUID takes in shellcode bytes, pads it to 16 bytes, breaks them into 16 byte chunks (size of a UUID),
+// ShellcodeToUUID takes in sc bytes, pads it to 16 bytes, breaks them into 16 byte chunks (size of a UUID),
 // converts the first eight bytes into Little Endian format, creates a UUID from the bytes, and returns an array of UUIDs
 func ShellcodeToUUID(shellcode []byte) ([]string, error) {
-	// Pad shellcode to 16 bytes, the size of a UUID
+	// Pad sc to 16 bytes, the size of a UUID
 	if 16-len(shellcode)%16 < 16 {
 		pad := bytes.Repeat([]byte{byte(0x90)}, 16-len(shellcode)%16)
 		shellcode = append(shellcode, pad...)

@@ -2,7 +2,7 @@ package crypto
 
 import "crypto/rc4"
 
-func Rc4encrypt(plainText, key []byte) ([]byte, error) {
+func Rc4Encrypt(plainText, key []byte) ([]byte, error) {
 	c, err := rc4.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -13,7 +13,7 @@ func Rc4encrypt(plainText, key []byte) ([]byte, error) {
 	return ciphertext, err
 }
 
-func Rc4decrypt(ciphertext, key []byte) ([]byte, error) {
+func Rc4Decrypt(ciphertext, key []byte) ([]byte, error) {
 	c, err := rc4.NewCipher(key)
 	if err != nil {
 		return nil, err

@@ -82,7 +82,7 @@ func CreateProcessWithPipe(shellcode []byte, program string) error {
 		return fmt.Errorf("VirtualAllocEx failed and returned 0")
 	}
 
-	// Write shellcode into child process memory
+	// Write sc into child process memory
 	errWriteProcessMemory := xwindows.WriteProcessMemory(
 		procInfo.Process,
 		addr,
@@ -94,7 +94,7 @@ func CreateProcessWithPipe(shellcode []byte, program string) error {
 		return fmt.Errorf("WriteProcessMemory failed: %w", errWriteProcessMemory)
 	}
 
-	// Change memory permissions to RX in a child process where shellcode was written
+	// Change memory permissions to RX in a child process where sc was written
 	oldProtect := windows.PAGE_READWRITE
 	errVirtualProtectEx := xwindows.VirtualProtectEx(
 		procInfo.Process,
@@ -303,7 +303,7 @@ func CreateProcessWithPipe(shellcode []byte, program string) error {
 			&stdOutOverlapped,
 		)
 		if errReadFileStdOut != nil && errReadFileStdOut.Error() != "The pipe has been ended." {
-			return fmt.Errorf("Error reading from STDOUT pipe:\r\n\t%s", errReadFileStdOut.Error())
+			return fmt.Errorf("error reading from STDOUT pipe: %s", errReadFileStdOut.Error())
 		}
 
 		if int(stdOutDone) == 0 {
@@ -327,7 +327,7 @@ func CreateProcessWithPipe(shellcode []byte, program string) error {
 			&stdErrOverlapped,
 		)
 		if errReadFileStdErr != nil && errReadFileStdErr.Error() != "The pipe has been ended." {
-			return fmt.Errorf("Error reading from STDOUT pipe:\r\n\t%s", errReadFileStdErr.Error())
+			return fmt.Errorf("error reading from STDOUT pipe: %s", errReadFileStdErr.Error())
 		}
 
 		if int(stdErrDone) == 0 {
@@ -338,12 +338,12 @@ func CreateProcessWithPipe(shellcode []byte, program string) error {
 		}
 	}
 
-	// Write the data collected from the childprocess' STDOUT to the parent process' STOUTOUT
+	// Write the data collected from the child process' STDOUT to the parent process' STOUT
 	if len(stdOutBuffer) > 0 {
-		log.Infof(fmt.Sprintf("[+]Child process STDOUT:\r\n%s", string(stdOutBuffer)))
+		log.Infof("Child process STDOUT: %s", string(stdOutBuffer))
 	}
 	if len(stdErrBuffer) > 0 {
-		log.Infof(fmt.Sprintf("[!]Child process STDERR:\r\n%s", string(stdErrBuffer)))
+		log.Infof("Child process STDERR: %s", string(stdErrBuffer))
 	}
 
 	return nil

@@ -8,7 +8,7 @@ import (
 )
 
 // LzwCompress 压缩函数
-func LzwCompress(data []byte, ratio int) (string, error) {
+func LzwCompress(data string, ratio int) (string, error) {
 	defaultRatio := 8 // 默认为 8
 	if ratio > 0 && ratio <= 16 {
 		defaultRatio = ratio
@@ -16,7 +16,7 @@ func LzwCompress(data []byte, ratio int) (string, error) {
 
 	var buf bytes.Buffer
 	writer := lzw.NewWriter(&buf, lzw.LSB, defaultRatio)
-	_, err := writer.Write(data)
+	_, err := writer.Write([]byte(data))
 	if err != nil {
 		return "", fmt.Errorf("压缩数据时发生错误：%v", err)
 	}
@@ -28,13 +28,13 @@ func LzwCompress(data []byte, ratio int) (string, error) {
 }
 
 // LzwDecompress 解压函数
-func LzwDecompress(data []byte, ratio int) (string, error) {
+func LzwDecompress(data string, ratio int) (string, error) {
 	defaultRatio := 8 // 默认为 8
 	if ratio > 0 && ratio <= 16 {
 		defaultRatio = ratio
 	}
 
-	decoded, err := hex.DecodeString(string(data))
+	decoded, err := hex.DecodeString(data)
 	if err != nil {
 		return "", fmt.Errorf("解码数据时发生错误：%v", err)
 	}

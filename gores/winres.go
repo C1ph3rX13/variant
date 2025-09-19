@@ -29,7 +29,7 @@ func (gwr GoWinRes) HandleWinRes() error {
 
 func (gwr GoWinRes) shouldInitRes() bool {
 	// 检查编译目录是否存在 winres 文件夹
-	resPath := filepath.Join(gwr.CompilePath, "winres")
+	resPath := filepath.Join(gwr.PatchDir, "winres")
 	folderInfo, err := os.Stat(resPath)
 	return os.IsNotExist(err) || !folderInfo.IsDir()
 }
@@ -55,19 +55,30 @@ func (gwr GoWinRes) patchRes() error {
 }
 
 func (gwr GoWinRes) Extract() error {
-	patchCmd := []string{
-		"go-winres",
-		"extract",
-		gwr.ExtractFile,
+	if gwr.ExtractFile == "" {
+		return fmt.Errorf("ExtractFile is required")
 	}
 
+	args := []string{"go-winres", "extract"}
 	if gwr.ExtractDir != "" {
-		patchCmd = append(patchCmd, "--dir", gwr.ExtractDir)
-		log.Infof("Output Directory (default: winres): %v", gwr.ExtractDir)
+		args = append(args, "--dir", gwr.ExtractDir)
+		log.Infof("Output Directory: %v", gwr.ExtractDir)
+	}
+	args = append(args, gwr.ExtractFile)
+
+	log.Infof("Extract: %v", args)
+
+	errCmd := gwr.execResCmd(args)
+	if errCmd != nil {
+		return errCmd
 	}
 
-	log.Infof("Extract: %v", patchCmd)
-	return gwr.execResCmd(patchCmd)
+	errHandle := gwr.HandleWinRes()
+	if errHandle != nil {
+		return errHandle
+	}
+
+	return nil
 }
 
 func (gwr GoWinRes) execResCmd(args []string) error {
@@ -75,8 +86,8 @@ func (gwr GoWinRes) execResCmd(args []string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	if gwr.CompilePath != "" {
-		cmd.Dir = gwr.CompilePath
+	if gwr.PatchDir != "" {
+		cmd.Dir = gwr.PatchDir
 	}
 
 	err := cmd.Run()

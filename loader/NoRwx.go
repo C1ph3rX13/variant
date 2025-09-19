@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"unsafe"
-	"variant/wdll"
 	"variant/xwindows"
 
 	"golang.org/x/sys/windows"
@@ -83,9 +82,9 @@ func NoRwx(shellcode []byte, path string) error {
 	}
 
 	// Parse DOS header e_lfanew entry to calculate entry point address
-	var dosHeader wdll.IMAGE_DOS_HEADER
-	dosHeader.E_lfanew = binary.LittleEndian.Uint32(headersBuffer[60:64])
-	ntHeader := (*xwindows.IMAGE_NT_HEADER)(unsafe.Pointer(uintptr(unsafe.Pointer(&headersBuffer[0])) + uintptr(dosHeader.E_lfanew)))
+	var dosHeader xwindows.IMAGE_DOS_HEADER
+	dosHeader.E_lfanew = uint32(int32(binary.LittleEndian.Uint32(headersBuffer[60:64])))
+	ntHeader := (*xwindows.IMAGE_NT_HEADERS64)(unsafe.Pointer(uintptr(unsafe.Pointer(&headersBuffer[0])) + uintptr(dosHeader.E_lfanew)))
 	codeEntry := uintptr(ntHeader.OptionalHeader.AddressOfEntryPoint) + imageBase
 
 	/*

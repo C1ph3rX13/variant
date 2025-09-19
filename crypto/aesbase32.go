@@ -8,14 +8,11 @@ func AesBase32Encrypt(plainText, key, iv []byte) (string, error) {
 	// AES 加密
 	aesEncrypt, err := AESCBCEncrypt(plainText, key, iv)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	// Base32 编码
 	base32Encode := base32.StdEncoding.EncodeToString(aesEncrypt)
-	if err != nil {
-		return "", nil
-	}
 
 	return base32Encode, nil
 }

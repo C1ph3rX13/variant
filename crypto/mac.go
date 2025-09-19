@@ -4,7 +4,7 @@ import (
 	"strings"
 	"unsafe"
 	"variant/log"
-	"variant/wdll"
+	"variant/xwindows"
 
 	"golang.org/x/sys/windows"
 )
@@ -18,7 +18,10 @@ func BinToMac(shellcode []byte) string {
 
 	for i := 0; i < len(shellcode)/6; i++ {
 		var macAddress [17]byte
-		ret, _, _ := wdll.RtlEthernetAddressToStringA().Call(uintptr(unsafe.Pointer(&shellcode[i*6])), uintptr(unsafe.Pointer(&macAddress[0])), 0)
+		ret, _ := xwindows.RtlEthernetAddressToStringA(
+			&shellcode[i*6],
+			uintptr(unsafe.Pointer(&macAddress[0])),
+		)
 		if ret == 0 {
 			log.Fatal("error calling RtlEthernetAddressToStringA")
 		}
@@ -65,7 +68,10 @@ func BinToMacStrings(shellcode []byte) []string {
 
 	for i := 0; i < len(shellcode)/6; i++ {
 		var macAddress [17]byte
-		ret, _, _ := wdll.RtlEthernetAddressToStringA().Call(uintptr(unsafe.Pointer(&shellcode[i*6])), uintptr(unsafe.Pointer(&macAddress[0])), 0)
+		ret, _ := xwindows.RtlEthernetAddressToStringA(
+			&shellcode[i*6],
+			uintptr(unsafe.Pointer(&macAddress[0])),
+		)
 		if ret == 0 {
 			log.Fatal("error calling RtlEthernetAddressToStringA")
 		}

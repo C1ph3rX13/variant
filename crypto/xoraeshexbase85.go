@@ -9,13 +9,13 @@ func XorAesHexBase85Encrypt(plainText, key, iv []byte) (string, error) {
 	// XOR 操作
 	xorEncode, err := XOREncodeDecode(plainText, key)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	// AES 加密
 	aesEncrypt, err := AESCBCEncrypt(xorEncode, key, iv)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	// 十六进制 编码
@@ -26,7 +26,7 @@ func XorAesHexBase85Encrypt(plainText, key, iv []byte) (string, error) {
 	// Base85 编码
 	base85Encode, err := Base85Encode(hexEncode)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return base85Encode, nil

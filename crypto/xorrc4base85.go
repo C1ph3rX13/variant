@@ -5,19 +5,19 @@ func XorRc4Base85Encrypt(plainText, key []byte) (string, error) {
 	// XOR 操作
 	xorEncode, err := XOREncodeDecode(plainText, key)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	// RC4 加密
-	rc4Encrypt, err := Rc4encrypt(xorEncode, key)
+	rc4Encrypt, err := Rc4Encrypt(xorEncode, key)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	// Base85 编码
 	base85Encode, err := Base85Encode(rc4Encrypt)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return base85Encode, nil
@@ -31,7 +31,7 @@ func XorRc4Base85Decrypt(cipherText string, key []byte) ([]byte, error) {
 	}
 
 	// RC4 解密
-	rc4Decrypt, err := Rc4decrypt(base85Decode, key)
+	rc4Decrypt, err := Rc4Decrypt(base85Decode, key)
 	if err != nil {
 		return nil, err
 	}

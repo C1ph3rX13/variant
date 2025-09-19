@@ -9,13 +9,13 @@ func XorRc4HexBase85Encrypt(plainText, key []byte) (string, error) {
 	// XOR 操作
 	xorEncode, err := XOREncodeDecode(plainText, key)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	// RC4 加密
-	rc4Encrypt, err := Rc4encrypt(xorEncode, key)
+	rc4Encrypt, err := Rc4Encrypt(xorEncode, key)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	// 十六进制 编码
@@ -26,7 +26,7 @@ func XorRc4HexBase85Encrypt(plainText, key []byte) (string, error) {
 	// Base85 编码
 	base85Encode, err := Base85Encode(hexEncode)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return base85Encode, nil
@@ -48,7 +48,7 @@ func XorRc4HexBase85Decrypt(cipherText string, key []byte) ([]byte, error) {
 	hexDecode = hexDecode[:n]
 
 	// RC4 解密
-	rc4Decrypt, err := Rc4decrypt(hexDecode, key)
+	rc4Decrypt, err := Rc4Decrypt(hexDecode, key)
 	if err != nil {
 		return nil, err
 	}

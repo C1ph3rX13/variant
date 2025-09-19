@@ -3,7 +3,7 @@ package sandbox
 import (
 	"os"
 	"time"
-	"variant/wdll"
+	"variant/xwindows"
 )
 
 /*
@@ -18,7 +18,7 @@ func BeepSleep(duration uint32) {
 	freq := uint32(30000)
 	startTime := time.Now()
 
-	r1, _, _ := wdll.Beep().Call(uintptr(freq), uintptr(duration*1000))
+	r1, _ := xwindows.Beep(freq, duration*1000)
 	if r1 == 0 {
 		os.Exit(0)
 	}

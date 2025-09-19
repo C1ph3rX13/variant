@@ -3,11 +3,12 @@ package compress
 import (
 	"encoding/hex"
 	"fmt"
+
 	"github.com/klauspost/compress/zstd"
 )
 
-// ZstdCompress 返回压缩后的十六进制字符串
-func ZstdCompress(s string) (string, error) {
+// ZSTDCompress 返回压缩后的十六进制字符串
+func ZSTDCompress(s string) (string, error) {
 	// 创建一个新的 Zstandard 压缩器
 	zw, err := zstd.NewWriter(nil)
 	if err != nil {
@@ -23,7 +24,7 @@ func ZstdCompress(s string) (string, error) {
 	return hexEncode, nil
 }
 
-func ZstdDecompress(compressed string) (string, error) {
+func ZSTDDecompress(compressed string) (string, error) {
 	// 创建一个新的 Zstandard 解压缩器
 	zr, err := zstd.NewReader(nil)
 	if err != nil {

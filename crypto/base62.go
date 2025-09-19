@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"fmt"
 	"github.com/eknkc/basex"
 )
 
@@ -21,7 +22,7 @@ func Base62Decode(cipherText string) ([]byte, error) {
 	// base62 解码
 	plainText, err := base62.Decode(cipherText)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("BASE62: decode error: %v", err)
 	}
 
 	return plainText, nil

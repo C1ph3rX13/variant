@@ -3,14 +3,12 @@ package sandbox
 import (
 	"os"
 	"unsafe"
-	"variant/wdll"
+	"variant/xwindows"
 )
 
 func GetPhysicalMemory() {
-	var proc = wdll.GetPhysicallyInstalledSystemMemory()
-
 	var memory uint64
-	_, _, _ = proc.Call(uintptr(unsafe.Pointer(&memory)))
+	_, _ = xwindows.GetPhysicallyInstalledSystemMemory(uintptr(unsafe.Pointer(&memory)))
 
 	memory = memory / 1048576
 	if memory < 8 {

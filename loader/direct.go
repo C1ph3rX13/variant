@@ -20,8 +20,8 @@ func Direct(shellcode []byte) {
 	}
 
 	/*
-		buffer := (*[0x1_000_000]byte)(unsafe.Pointer(execMem))[:len(shellcode):len(shellcode)]
-		copy(buffer, shellcode)
+		buffer := (*[0x1_000_000]byte)(unsafe.Pointer(execMem))[:len(sc):len(sc)]
+		copy(buffer, sc)
 	*/
 	copy(unsafe.Slice((*byte)(unsafe.Pointer(execMem)), len(shellcode)), shellcode)
 

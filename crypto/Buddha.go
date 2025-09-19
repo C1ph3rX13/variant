@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"net/url"
 	"variant/log"
-	"variant/network"
+	"variant/remote"
 )
 
 const (
@@ -30,7 +30,7 @@ func sendRequest(mode, code, txt string) (string, error) {
 	}
 	postBody := v.Encode()
 
-	client := network.CreateRestyClient()
+	client := remote.CreateRestyClient()
 	resp, respErr := client.R().
 		SetHeaders(BuddhaHeader).
 		SetBody(postBody).
@@ -62,22 +62,22 @@ func decode(mode string, cipherText string) []byte {
 	return stringText
 }
 
-// BuddhaEncode 编码明文
+// Deprecated: 加密接口废弃，等待更新
 func BuddhaEncode(plainText []byte) string {
 	return encode("Buddha", plainText)
 }
 
-// BuddhaDecode 解码密文
+// Deprecated: 加密接口废弃，等待更新
 func BuddhaDecode(cipherText string) []byte {
 	return decode("Buddha", cipherText)
 }
 
-// BearEncode 编码明文
+// Deprecated: 加密接口废弃，等待更新
 func BearEncode(plainText []byte) string {
 	return encode("Bear", plainText)
 }
 
-// BearDecode 解码密文
+// Deprecated: 加密接口废弃，等待更新
 func BearDecode(cipherText string) []byte {
 	return decode("Bear", cipherText)
 }
